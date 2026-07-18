@@ -13,7 +13,7 @@
     <Window.Resources>
         <!-- Botão do menu lateral -->
         <Style x:Key="NavButton" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource TextOnDarkMuted}"/>
+            <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="13.5"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -24,7 +24,7 @@
                         <Border x:Name="b" CornerRadius="8" Padding="14,11" Background="Transparent">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="ico" Text="{TemplateBinding Tag}" FontSize="16" Margin="0,0,12,0"
-                                           VerticalAlignment="Center" Foreground="{StaticResource TextOnDarkMuted}"/>
+                                           VerticalAlignment="Center" Foreground="White"/>
                                 <ContentPresenter VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>

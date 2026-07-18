@@ -37,9 +37,10 @@
                           DisplayMemberPath="Display"
                           IsEnabled="{Binding IsNpcapAvailable}"/>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
-                    <TextBlock Text="Duração:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                    <ComboBox Width="70" SelectedValuePath="Tag" SelectedValue="{Binding ScanSeconds}">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0"
+                            ToolTip="Tempo que o app aguarda respostas dos dispositivos após enviar a descoberta. Redes maiores ou dispositivos lentos: use mais tempo.">
+                    <TextBlock Text="Tempo de escuta:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
+                    <ComboBox Width="76" SelectedValuePath="Tag" SelectedValue="{Binding ScanSeconds}">
                         <ComboBoxItem Content="2 s" Tag="2"/>
                         <ComboBoxItem Content="3 s" Tag="3"/>
                         <ComboBoxItem Content="5 s" Tag="5"/>
