@@ -1,0 +1,104 @@
+<Window x:Class="ScanProfinet.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ScanProfinet.ViewModels"
+        xmlns:views="clr-namespace:ScanProfinet.Views"
+        Title="ScanProfinet" Height="760" Width="1200" MinWidth="1000" MinHeight="640"
+        WindowStartupLocation="CenterScreen" Background="{StaticResource Background}">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <!-- Botão do menu lateral -->
+        <Style x:Key="NavButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource TextOnDarkMuted}"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="10,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="b" CornerRadius="8" Padding="14,11" Background="Transparent">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="ico" Text="{TemplateBinding Tag}" FontSize="16" Margin="0,0,12,0"
+                                           VerticalAlignment="Center" Foreground="{StaticResource TextOnDarkMuted}"/>
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{StaticResource NavyHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="ico" Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="248"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Menu lateral ===== -->
+        <Border Grid.Column="0" Background="{StaticResource Navy}">
+            <DockPanel>
+                <!-- Marca -->
+                <Border DockPanel.Dock="Top" Padding="20,22,20,18">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource Accent}">
+                                <TextBlock Text="⬡" FontSize="19" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="ScanProfinet" Foreground="White" FontSize="17" FontWeight="Bold"/>
+                                <TextBlock Text="Diagnóstico PROFINET" Foreground="{StaticResource TextOnDarkMuted}" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border DockPanel.Dock="Top" Height="1" Background="#1E2E48" Margin="16,0,16,10"/>
+
+                <!-- Rodapé -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="20,0,20,16">
+                    <Border Height="1" Background="#1E2E48" Margin="0,0,0,12"/>
+                    <TextBlock Text="© 2026 Paulo Leal Taveira" Foreground="{StaticResource TextOnDarkMuted}" FontSize="11"/>
+                    <TextBlock Text="Todos os direitos reservados." Foreground="#5B6E8C" FontSize="10.5" Margin="0,1,0,0"/>
+                    <TextBlock Text="{Binding VersionText}" Foreground="#5B6E8C" FontSize="10.5" Margin="0,6,0,0"/>
+                </StackPanel>
+
+                <!-- Navegação -->
+                <StackPanel DockPanel.Dock="Top">
+                    <RadioButton Style="{StaticResource NavButton}" Content="Scan da rede" Tag="🔍"
+                                 IsChecked="{Binding IsScan, Mode=OneWay}" Command="{Binding GoScanCommand}"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="Comparar redes" Tag="⇄"
+                                 IsChecked="{Binding IsCompare, Mode=OneWay}" Command="{Binding GoCompareCommand}"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="Monitor de rede" Tag="📈"
+                                 IsChecked="{Binding IsMonitor, Mode=OneWay}" Command="{Binding GoMonitorCommand}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ===== Conteúdo ===== -->
+        <Grid Grid.Column="1">
+            <views:ScanView DataContext="{Binding Scan}"
+                            Visibility="{Binding DataContext.IsScan, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
+            <views:CompareView DataContext="{Binding Compare}"
+                               Visibility="{Binding DataContext.IsCompare, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
+            <views:MonitorView DataContext="{Binding Monitor}"
+                               Visibility="{Binding DataContext.IsMonitor, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
+        </Grid>
+    </Grid>
+</Window>

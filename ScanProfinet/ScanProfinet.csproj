@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\scanprofinet.ico</ApplicationIcon>
+    <AssemblyName>ScanProfinet</AssemblyName>
+    <RootNamespace>ScanProfinet</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>ScanProfinet</Product>
+    <Company>Paulo Leal Taveira</Company>
+    <Authors>Paulo Leal Taveira</Authors>
+    <Copyright>Copyright © 2026 Paulo Leal Taveira</Copyright>
+    <Description>Scanner, comparador e monitor de redes PROFINET via DCP.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\scanprofinet.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.*" />
+    <PackageReference Include="SharpPcap" Version="6.*" />
+    <PackageReference Include="PacketDotNet" Version="1.4.*" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+# Build
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+
+# Instalador
+installer/output/
+installer/icon-temp.png
+installer/dependencies/*.exe
+
+# Diversos
+.vs/
+*.suo
+Thumbs.db
