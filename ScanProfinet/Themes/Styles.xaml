@@ -33,9 +33,11 @@
     <SolidColorBrush x:Key="Purple" Color="#7C3AED"/>
 
     <!-- ============ Tipografia ============ -->
+    <!-- IMPORTANTE: sem setar Foreground aqui. Um Foreground implícito venceria a cor
+         herdada nos textos gerados por ContentPresenter (cabeçalhos de DataGrid, itens
+         de menu, ComboBox), deixando-os escuros. Deixamos herdar. -->
     <Style TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Segoe UI"/>
-        <Setter Property="Foreground" Value="{StaticResource Text}"/>
         <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
     </Style>
 
@@ -145,9 +147,79 @@
     <Style TargetType="ComboBox">
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Padding" Value="8,5"/>
         <Setter Property="Foreground" Value="{StaticResource Text}"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
         <Setter Property="Height" Value="34"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6"/>
+                        <ToggleButton Focusable="False" Background="Transparent" BorderThickness="0"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="Transparent"/>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="cp" Margin="10,0,28,0" VerticalAlignment="Center"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          IsHitTestVisible="False"/>
+                        <Path HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,11,0"
+                              Data="M0,0 L4,4 L8,0 Z" Fill="{StaticResource TextMuted}" IsHitTestVisible="False"/>
+                        <Popup x:Name="PART_Popup" Placement="Bottom" Focusable="False" AllowsTransparency="True"
+                               IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Slide">
+                            <Border Background="White" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                                    CornerRadius="6" Margin="0,4,0,0" SnapsToDevicePixels="True"
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                <ScrollViewer>
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Background" Value="#F1F5F9"/>
+                            <Setter Property="Foreground" Value="#94A3B8"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource Text}"/>
+        <Setter Property="Padding" Value="10,7"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="b" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4" Margin="2,1">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#EEF2F7"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#DBEAFE"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style TargetType="CheckBox">

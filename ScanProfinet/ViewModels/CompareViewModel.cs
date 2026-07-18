@@ -25,6 +25,9 @@ public partial class CompareViewModel : ObservableObject
 
     public int CurrentDeviceCount => _scan.Devices.Count;
 
+    /// <summary>Disparado quando uma rede salva é excluída.</summary>
+    public event Action? SnapshotsChanged;
+
     public CompareViewModel(SnapshotRepository repo, ScanViewModel scan)
     {
         _repo = repo;
@@ -104,6 +107,7 @@ public partial class CompareViewModel : ObservableObject
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
         _repo.DeleteSnapshot(SelectedReference.Id);
         RefreshReferences();
+        SnapshotsChanged?.Invoke();
         Rows.Clear();
         HasResult = false;
     }

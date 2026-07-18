@@ -18,34 +18,27 @@
         </StackPanel>
 
         <!-- Controles -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,12">
+            <WrapPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,10,4">
+                    <TextBlock Text="Rede de referência:" VerticalAlignment="Center"
+                               FontWeight="SemiBold" FontSize="12.5" Margin="0,0,8,0"/>
+                    <ComboBox Width="280" VerticalAlignment="Center"
+                              ItemsSource="{Binding References}" SelectedItem="{Binding SelectedReference}"
+                              DisplayMemberPath="Display"/>
+                </StackPanel>
 
-                <TextBlock Grid.Column="0" Text="Rede de referência:" VerticalAlignment="Center"
-                           FontWeight="SemiBold" FontSize="12.5" Margin="0,0,8,0"/>
-                <ComboBox Grid.Column="1" MinWidth="300" VerticalAlignment="Center"
-                          ItemsSource="{Binding References}" SelectedItem="{Binding SelectedReference}"
-                          DisplayMemberPath="Display"/>
-
-                <Button Grid.Column="2" Content="Excluir" Style="{StaticResource BtnGhost}"
-                        Command="{Binding DeleteReferenceCommand}" Margin="8,0,0,0" MinWidth="80"/>
-                <Button Grid.Column="3" Content="Escanear rede atual" Style="{StaticResource BtnPrimary}"
-                        Command="{Binding ScanNowCommand}" Margin="14,0,0,0" MinWidth="160"/>
-                <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="12"
+                <Button Content="Excluir" Style="{StaticResource BtnGhost}"
+                        Command="{Binding DeleteReferenceCommand}" Margin="0,4,18,4" MinWidth="80"/>
+                <Button Content="Escanear rede atual" Style="{StaticResource BtnPrimary}"
+                        Command="{Binding ScanNowCommand}" Margin="0,4,10,4" MinWidth="160"/>
+                <TextBlock VerticalAlignment="Center" Margin="0,4,14,4" FontSize="12"
                            Foreground="{StaticResource TextMuted}">
                     <Run Text="Atual:"/><Run Text="{Binding CurrentDeviceCount, Mode=OneWay}"/><Run Text=" disp."/>
                 </TextBlock>
-                <Button Grid.Column="5" Content="Comparar" Style="{StaticResource BtnSuccess}"
-                        Command="{Binding CompareCommand}" Margin="14,0,0,0" MinWidth="120"/>
-            </Grid>
+                <Button Content="Comparar" Style="{StaticResource BtnSuccess}"
+                        Command="{Binding CompareCommand}" Margin="0,4,0,4" MinWidth="120"/>
+            </WrapPanel>
         </Border>
 
         <!-- Resumo -->
@@ -96,9 +89,14 @@
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="Nenhuma comparação ainda" FontSize="15" FontWeight="SemiBold"
                            HorizontalAlignment="Center" Foreground="{StaticResource TextMuted}"/>
-                <TextBlock Style="{StaticResource Subtle}" Margin="0,6,0,0" TextAlignment="Center" MaxWidth="440"
-                           Text="1) Escolha a rede de referência salva.  2) Escaneie a rede atual.  3) Clique em Comparar."/>
-                <TextBlock Text="{Binding StatusText}" Style="{StaticResource Subtle}" Margin="0,14,0,0" TextAlignment="Center"/>
+                <TextBlock Style="{StaticResource Subtle}" Margin="0,10,0,0" TextAlignment="Center"
+                           TextWrapping="Wrap" MaxWidth="460">
+                    <Run Text="1) Escolha a rede de referência salva."/><LineBreak/>
+                    <Run Text="2) Escaneie a rede atual."/><LineBreak/>
+                    <Run Text="3) Clique em Comparar."/>
+                </TextBlock>
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource Subtle}" Margin="0,14,0,0"
+                           TextAlignment="Center" TextWrapping="Wrap" MaxWidth="460"/>
             </StackPanel>
         </Border>
 

@@ -19,29 +19,22 @@
         </StackPanel>
 
         <!-- Controles -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,10" Margin="0,0,0,12">
+            <WrapPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,10,4">
+                    <TextBlock Text="Fonte:" VerticalAlignment="Center"
+                               FontWeight="SemiBold" FontSize="12.5" Margin="0,0,8,0"/>
+                    <ComboBox Width="260" VerticalAlignment="Center"
+                              ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
+                              DisplayMemberPath="Display"/>
+                </StackPanel>
 
-                <TextBlock Grid.Column="0" Text="Fonte:" VerticalAlignment="Center"
-                           FontWeight="SemiBold" FontSize="12.5" Margin="0,0,8,0"/>
-                <ComboBox Grid.Column="1" MinWidth="280" VerticalAlignment="Center"
-                          ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
-                          DisplayMemberPath="Display"/>
+                <Button Content="Carregar dispositivos" Style="{StaticResource BtnGhost}"
+                        Command="{Binding LoadTargetsCommand}" Margin="0,4,18,4" MinWidth="160"/>
 
-                <Button Grid.Column="2" Content="Carregar dispositivos" Style="{StaticResource BtnGhost}"
-                        Command="{Binding LoadTargetsCommand}" Margin="10,0,0,0" MinWidth="160"/>
-
-                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,18,4">
                     <TextBlock Text="Intervalo:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                    <ComboBox Width="70" SelectedValuePath="Tag" SelectedValue="{Binding IntervalSeconds}">
+                    <ComboBox Width="74" SelectedValuePath="Tag" SelectedValue="{Binding IntervalSeconds}">
                         <ComboBoxItem Content="1 s" Tag="1"/>
                         <ComboBoxItem Content="2 s" Tag="2"/>
                         <ComboBoxItem Content="5 s" Tag="5"/>
@@ -49,13 +42,13 @@
                     </ComboBox>
                 </StackPanel>
 
-                <Button Grid.Column="4" Content="Iniciar" Style="{StaticResource BtnSuccess}"
-                        Command="{Binding StartCommand}" Margin="14,0,0,0" MinWidth="100"
+                <Button Content="Iniciar" Style="{StaticResource BtnSuccess}"
+                        Command="{Binding StartCommand}" Margin="0,4,0,4" MinWidth="100"
                         Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVis}}"/>
-                <Button Grid.Column="5" Content="Parar" Style="{StaticResource BtnDanger}"
-                        Command="{Binding StopCommand}" Margin="8,0,0,0" MinWidth="100"
+                <Button Content="Parar" Style="{StaticResource BtnDanger}"
+                        Command="{Binding StopCommand}" Margin="0,4,0,4" MinWidth="100"
                         Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
-            </Grid>
+            </WrapPanel>
         </Border>
 
         <!-- Alvos monitorados -->

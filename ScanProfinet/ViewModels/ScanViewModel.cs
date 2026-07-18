@@ -33,6 +33,9 @@ public partial class ScanViewModel : ObservableObject
 
     public bool HasDevices => Devices.Count > 0;
 
+    /// <summary>Disparado quando uma rede é salva (para atualizar o painel de redes salvas).</summary>
+    public event Action? SnapshotsChanged;
+
     public ScanViewModel(SnapshotRepository repo)
     {
         _repo = repo;
@@ -211,6 +214,7 @@ public partial class ScanViewModel : ObservableObject
         {
             _repo.SaveSnapshot(name, dlg.Notes, Devices);
             StatusText = $"Rede salva como '{name}' ({Devices.Count} dispositivos).";
+            SnapshotsChanged?.Invoke();
             MessageBox.Show($"Rede '{name}' salva com sucesso.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
