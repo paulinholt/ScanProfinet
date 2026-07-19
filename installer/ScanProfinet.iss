@@ -19,6 +19,13 @@
   #define NpcapInstaller ""
 #endif
 
+; Visual C++ 2015-2022 redistribuivel (x64) — necessario para o .NET 8 rodar em
+; Windows Server 2012/2012 R2 (instala UCRT + runtime VC++). O build-installer.ps1
+; detecta o vc_redist.x64.exe em installer\dependencies automaticamente.
+#ifndef VcRedist
+  #define VcRedist ""
+#endif
+
 #define AppName      "ScanProfinet"
 #define AppPublisher "Paulo Leal Taveira"
 #define AppExeName   "ScanProfinet.exe"
@@ -50,7 +57,8 @@ UninstallDisplayIcon={app}\{#AppExeName}
 UninstallDisplayName={#AppName}
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-MinVersion=10.0.17763
+; 6.2 = Windows 8 / Windows Server 2012. Permite instalar em SOs antigos suportados pelo .NET 8.
+MinVersion=6.2
 CloseApplications=yes
 RestartApplications=no
 PrivilegesRequired=admin
@@ -71,6 +79,9 @@ Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 #if NpcapInstaller != ""
 Source: "{#NpcapInstaller}"; DestDir: "{tmp}"; Flags: deleteafterinstall ignoreversion
 #endif
+#if VcRedist != ""
+Source: "{#VcRedist}"; DestDir: "{tmp}"; Flags: deleteafterinstall ignoreversion
+#endif
 
 [Icons]
 Name: "{group}\{#AppName}";             Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppExeName}"
@@ -78,6 +89,10 @@ Name: "{group}\Desinstalar {#AppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}";       Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
+#if VcRedist != ""
+; /install /quiet e idempotente: se ja houver versao igual/mais nova, sai sem fazer nada.
+Filename: "{tmp}\{#ExtractFileName(VcRedist)}"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalando runtime do sistema (Visual C++ 2015-2022)..."; Flags: waituntilterminated
+#endif
 #if NpcapInstaller != ""
 Filename: "{tmp}\{#ExtractFileName(NpcapInstaller)}"; StatusMsg: "Instalando Npcap..."; Tasks: npcap; Flags: waituntilterminated
 #endif
