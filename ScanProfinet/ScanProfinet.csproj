@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- WinForms habilitado apenas para o NotifyIcon (bandeja). Removemos os
+         usings implícitos de WinForms/Drawing para não conflitar com WPF
+         (MessageBox, Application, etc.); no TrayService qualificamos por extenso. -->
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Resources\scanprofinet.ico</ApplicationIcon>
     <AssemblyName>ScanProfinet</AssemblyName>
     <RootNamespace>ScanProfinet</RootNamespace>
@@ -19,6 +23,12 @@
 
   <ItemGroup>
     <Resource Include="Resources\scanprofinet.ico" />
+  </ItemGroup>
+
+  <!-- Evita ambiguidade entre System.Windows.* (WPF) e System.Windows.Forms.* -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
   <ItemGroup>

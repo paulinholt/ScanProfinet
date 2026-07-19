@@ -107,6 +107,17 @@ public class LatencyToHeightConverter : IValueConverter
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
 }
 
+/// <summary>Converte uma string hexadecimal (#RRGGBB) em SolidColorBrush.</summary>
+public class HexToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type t, object p, CultureInfo c)
+    {
+        try { return new SolidColorBrush((Color)ColorConverter.ConvertFromString((string)value)); }
+        catch { return new SolidColorBrush(Colors.Gray); }
+    }
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
+}
+
 /// <summary>Cor da barra de latência: verde (baixa) → âmbar (média) → vermelho (sem resposta).</summary>
 public class LatencyToBrushConverter : IValueConverter
 {

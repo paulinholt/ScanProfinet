@@ -155,8 +155,12 @@ public partial class ScanViewModel : ObservableObject
             return;
 
         var iface = Interfaces[SelectedInterfaceIndex];
+        string oldIp = SelectedDevice.IpAddress, oldMask = SelectedDevice.SubnetMask, oldGw = SelectedDevice.Gateway;
         var progress = new Progress<string>(m => StatusText = m);
         bool ok = await ProfinetDcpService.SetIpAsync(iface.Index, SelectedDevice.MacAddress, NewIp, NewMask, NewGateway, progress);
+
+        AppLog.Readdress($"[SET IP]  {(ok ? "OK " : "FALHA")}  MAC={SelectedDevice.MacAddress}  nome='{SelectedDevice.DeviceName}'  " +
+                         $"IP: {oldIp} -> {NewIp}  |  Máscara: {oldMask} -> {NewMask}  |  Gateway: {oldGw} -> {NewGateway}");
         if (ok)
         {
             SelectedDevice.IpAddress = NewIp;
@@ -176,8 +180,12 @@ public partial class ScanViewModel : ObservableObject
             return;
 
         var iface = Interfaces[SelectedInterfaceIndex];
+        string oldName = SelectedDevice.DeviceName;
         var progress = new Progress<string>(m => StatusText = m);
         bool ok = await ProfinetDcpService.SetDeviceNameAsync(iface.Index, SelectedDevice.MacAddress, NewDeviceName, progress);
+
+        AppLog.Readdress($"[SET NOME]  {(ok ? "OK " : "FALHA")}  MAC={SelectedDevice.MacAddress}  " +
+                         $"IP={SelectedDevice.IpAddress}  Nome: '{oldName}' -> '{NewDeviceName.ToLowerInvariant()}'");
         if (ok) SelectedDevice.DeviceName = NewDeviceName.ToLowerInvariant();
     }
 

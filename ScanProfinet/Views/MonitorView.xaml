@@ -42,6 +42,22 @@
                     </ComboBox>
                 </StackPanel>
 
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,18,4"
+                            ToolTip="Faz re-scan DCP periódico e avisa quando um dispositivo novo entra na rede monitorada.">
+                    <CheckBox Content="Detectar novos" IsChecked="{Binding DetectNewDevices}" VerticalAlignment="Center"/>
+                    <ComboBox Width="200" Margin="10,0,0,0" VerticalAlignment="Center"
+                              ItemsSource="{Binding Interfaces}" SelectedIndex="{Binding SelectedScanInterfaceIndex}"
+                              DisplayMemberPath="Display" IsEnabled="{Binding DetectNewDevices}"
+                              ToolTip="Placa de rede usada no re-scan"/>
+                    <ComboBox Width="78" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding DetectNewDevices}"
+                              SelectedValuePath="Tag" SelectedValue="{Binding RescanSeconds}" ToolTip="Intervalo do re-scan">
+                        <ComboBoxItem Content="10 s" Tag="10"/>
+                        <ComboBoxItem Content="20 s" Tag="20"/>
+                        <ComboBoxItem Content="30 s" Tag="30"/>
+                        <ComboBoxItem Content="60 s" Tag="60"/>
+                    </ComboBox>
+                </StackPanel>
+
                 <Button Content="Iniciar" Style="{StaticResource BtnSuccess}"
                         Command="{Binding StartCommand}" Margin="0,4,0,4" MinWidth="100"
                         Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVis}}"/>

@@ -99,6 +99,48 @@
                                Visibility="{Binding DataContext.IsCompare, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
             <views:MonitorView DataContext="{Binding Monitor}"
                                Visibility="{Binding DataContext.IsMonitor, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
+
+            <!-- Sobreposição de notificações (toasts) -->
+            <ItemsControl ItemsSource="{Binding Notifications.Toasts}" Width="370" Panel.ZIndex="100"
+                          VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,14,18,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{Binding BgHex, Converter={StaticResource HexBrush}}"
+                                BorderBrush="{Binding AccentHex, Converter={StaticResource HexBrush}}"
+                                BorderThickness="1" CornerRadius="10" Margin="0,0,0,10">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#334155" BlurRadius="16" ShadowDepth="2" Opacity="0.22"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="5"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="{Binding AccentHex, Converter={StaticResource HexBrush}}"
+                                        CornerRadius="10,0,0,10"/>
+                                <StackPanel Grid.Column="1" Margin="12,10,6,10">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Glyph}" FontSize="14"
+                                                   Foreground="{Binding AccentHex, Converter={StaticResource HexBrush}}"
+                                                   Margin="0,0,7,0"/>
+                                        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13"
+                                                   Foreground="#1E293B" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Message}" FontSize="12" Foreground="#334155"
+                                               TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding TimeText}" FontSize="10.5" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Content="✕" FontSize="12" Foreground="#64748B"
+                                        Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                        Padding="8,4" VerticalAlignment="Top"
+                                        Command="{Binding DataContext.DismissToastCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </Grid>
 
         <!-- ===== Painel direito: redes salvas ===== -->

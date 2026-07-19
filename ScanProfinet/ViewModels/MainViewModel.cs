@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ScanProfinet.Data;
 using ScanProfinet.Models;
+using ScanProfinet.Services;
 using ScanProfinet.Views;
 
 namespace ScanProfinet.ViewModels;
@@ -20,6 +21,7 @@ public partial class MainViewModel : ObservableObject
     public ScanViewModel Scan { get; }
     public CompareViewModel Compare { get; }
     public MonitorViewModel Monitor { get; }
+    public NotificationService Notifications { get; }
 
     /// <summary>Redes salvas exibidas no painel lateral direito.</summary>
     public ObservableCollection<NetworkSnapshot> SavedNetworks { get; } = new();
@@ -32,9 +34,10 @@ public partial class MainViewModel : ObservableObject
         Database.Initialize();
         _repo = new SnapshotRepository();
 
+        Notifications = new NotificationService(PostToUi);
         Scan = new ScanViewModel(_repo);
         Compare = new CompareViewModel(_repo, Scan);
-        Monitor = new MonitorViewModel(_repo, Scan);
+        Monitor = new MonitorViewModel(_repo, Scan, Notifications);
 
         // Quando uma rede é salva ou excluída, atualiza o painel direito.
         Scan.SnapshotsChanged += RefreshSavedNetworks;
@@ -89,4 +92,16 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand] private void OpenSelectedSaved() => OpenSnapshotDetails(SelectedSaved);
     [RelayCommand] private void RefreshSaved() => RefreshSavedNetworks();
+
+    [RelayCommand] private void DismissToast(ToastNotification? toast)
+    {
+        if (toast != null) Notifications.Dismiss(toast);
+    }
+
+    private static void PostToUi(Action a)
+    {
+        var d = Application.Current?.Dispatcher;
+        if (d == null || d.CheckAccess()) a();
+        else d.Invoke(a);
+    }
 }

@@ -12,6 +12,7 @@
     <conv:EventTypeToBrushConverter x:Key="EventBrush"/>
     <conv:LatencyToHeightConverter x:Key="LatHeight"/>
     <conv:LatencyToBrushConverter x:Key="LatBrush"/>
+    <conv:HexToBrushConverter x:Key="HexBrush"/>
 
     <!-- ============ Paleta ============ -->
     <Color x:Key="NavyColor">#0F1B2D</Color>

@@ -12,24 +12,38 @@ public partial class MonitorViewModel : ObservableObject
 {
     private readonly SnapshotRepository _repo;
     private readonly ScanViewModel _scan;
+    private readonly NotificationService _notify;
     private readonly PingMonitorService _monitor;
 
     [ObservableProperty] private string _statusText = "Carregue os dispositivos e inicie o monitoramento.";
     [ObservableProperty] private bool _isRunning;
-    [ObservableProperty] private object? _selectedSource;   // "SCAN" (string) ou NetworkSnapshot
+    [ObservableProperty] private object? _selectedSource;
     [ObservableProperty] private int _intervalSeconds = 2;
 
-    /// <summary>Itens da combo de fonte: "Rede atual (scan)" + snapshots salvos.</summary>
+    // Detecção de novos dispositivos (re-scan DCP)
+    [ObservableProperty] private bool _detectNewDevices = true;
+    [ObservableProperty] private int _selectedScanInterfaceIndex = -1;
+    [ObservableProperty] private int _rescanSeconds = 20;
+
     public ObservableCollection<SourceOption> Sources { get; } = new();
     public ObservableCollection<MonitorTarget> Targets { get; } = new();
     public ObservableCollection<MonitorEvent> Events { get; } = new();
 
-    public MonitorViewModel(SnapshotRepository repo, ScanViewModel scan)
+    // Reaproveita as interfaces já detectadas pela aba de Scan.
+    public ObservableCollection<NetworkInterfaceInfo> Interfaces => _scan.Interfaces;
+    public bool IsNpcapAvailable => _scan.IsNpcapAvailable;
+
+    public MonitorViewModel(SnapshotRepository repo, ScanViewModel scan, NotificationService notify)
     {
         _repo = repo;
         _scan = scan;
+        _notify = notify;
         _monitor = new PingMonitorService(repo, PostToUi);
         _monitor.EventLogged += OnEventLogged;
+        _monitor.TargetAdded += OnTargetAdded;
+
+        // Herda a interface selecionada na aba de Scan, se houver.
+        SelectedScanInterfaceIndex = _scan.SelectedInterfaceIndex;
         RefreshSources();
         LoadRecentEvents();
     }
@@ -48,8 +62,8 @@ public partial class MonitorViewModel : ObservableObject
         Sources.Add(new SourceOption("SCAN", "Rede atual (último scan)", null));
         foreach (var s in _repo.ListSnapshots())
             Sources.Add(new SourceOption($"SNAP:{s.Id}", s.Display, s.Id));
-
         SelectedSource = Sources.FirstOrDefault(x => x.Key == previous) ?? Sources[0];
+        OnPropertyChanged(nameof(IsNpcapAvailable));
     }
 
     private void LoadRecentEvents()
@@ -68,19 +82,14 @@ public partial class MonitorViewModel : ObservableObject
 
         IEnumerable<ProfinetDevice> devices;
         if (opt.SnapshotId is long id)
-        {
-            var snap = _repo.LoadSnapshot(id);
-            devices = snap?.Devices ?? Enumerable.Empty<ProfinetDevice>();
-        }
+            devices = _repo.LoadSnapshot(id)?.Devices ?? Enumerable.Empty<ProfinetDevice>();
         else
-        {
             devices = _scan.Devices;
-        }
 
         int skipped = 0;
         foreach (var d in devices)
         {
-            if (!d.HasIp) { skipped++; continue; }   // sem IP não dá para pingar
+            if (!d.HasIp) { skipped++; continue; }
             Targets.Add(new MonitorTarget
             {
                 IpAddress = d.IpAddress,
@@ -91,23 +100,42 @@ public partial class MonitorViewModel : ObservableObject
 
         StatusText = Targets.Count == 0
             ? "Nenhum dispositivo com IP válido para monitorar." + (skipped > 0 ? $" ({skipped} sem IP)" : "")
-            : $"{Targets.Count} dispositivo(s) carregado(s)." + (skipped > 0 ? $" {skipped} ignorado(s) por não ter IP." : "");
+            : $"{Targets.Count} dispositivo(s) carregado(s)." + (skipped > 0 ? $" {skipped} sem IP ignorado(s)." : "");
     }
 
     [RelayCommand]
     private void Start()
     {
         var selected = Targets.Where(t => t.IsSelected).ToList();
-        if (selected.Count == 0)
+        if (selected.Count == 0 && !DetectNewDevices)
         {
-            MessageBox.Show("Carregue e selecione ao menos um dispositivo para monitorar.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Carregue e selecione ao menos um dispositivo, ou ative a detecção de novos dispositivos.",
+                "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
+        if (DetectNewDevices && (!IsNpcapAvailable || SelectedScanInterfaceIndex < 0))
+        {
+            var r = MessageBox.Show(
+                "A detecção de novos dispositivos precisa do Npcap e de uma placa de rede selecionada.\n\n" +
+                "Deseja continuar apenas com o monitoramento por ping (sem detectar novos)?",
+                "ScanProfinet", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (r != MessageBoxResult.Yes) return;
+            DetectNewDevices = false;
+        }
+
         _monitor.IntervalMs = Math.Max(1, IntervalSeconds) * 1000;
-        _monitor.Start(selected);
+        _monitor.DetectNewDevices = DetectNewDevices;
+        _monitor.RescanIntervalMs = Math.Max(5, RescanSeconds) * 1000;
+        _monitor.ScanInterfaceIndex = DetectNewDevices && SelectedScanInterfaceIndex >= 0
+            ? Interfaces[SelectedScanInterfaceIndex].Index : -1;
+
+        var baseline = Targets.Select(t => t.MacAddress);
+        _monitor.Start(selected, baseline);
         IsRunning = true;
-        StatusText = $"Monitorando {selected.Count} dispositivo(s) a cada {IntervalSeconds}s...";
+        StatusText = DetectNewDevices
+            ? $"Monitorando {selected.Count} dispositivo(s) + detecção de novos a cada {RescanSeconds}s."
+            : $"Monitorando {selected.Count} dispositivo(s) a cada {IntervalSeconds}s.";
     }
 
     [RelayCommand]
@@ -127,11 +155,33 @@ public partial class MonitorViewModel : ObservableObject
         Events.Clear();
     }
 
+    private void OnTargetAdded(MonitorTarget target)
+    {
+        // Já vem na thread da UI (o serviço usa PostToUi).
+        Targets.Add(target);
+    }
+
     private void OnEventLogged(MonitorEvent ev)
     {
-        // Já chega na thread da UI (o serviço usa PostToUi).
         Events.Insert(0, ev);
         while (Events.Count > 500) Events.RemoveAt(Events.Count - 1);
+
+        // Notificações (bandeja + toast) conforme o tipo de evento.
+        switch (ev.EventType)
+        {
+            case "QUEDA":
+                _notify.Notify($"Device fora da rede: {ev.DeviceName}", $"{ev.IpAddress} parou de responder.", ToastType.Danger);
+                break;
+            case "ADICIONADO":
+                _notify.Notify($"Novo device na rede: {ev.DeviceName}", ev.Detail, ToastType.Warning);
+                break;
+            case "RETORNO":
+                _notify.Notify($"Device voltou: {ev.DeviceName}", $"{ev.IpAddress} respondendo novamente.", ToastType.Success, tray: false);
+                break;
+            case "OSCILANDO":
+                _notify.Notify($"Conexão instável: {ev.DeviceName}", ev.Detail, ToastType.Warning, tray: false);
+                break;
+        }
     }
 
     public void OnClosing() => _monitor.Stop();
