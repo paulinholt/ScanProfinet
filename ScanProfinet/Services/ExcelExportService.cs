@@ -12,7 +12,7 @@ public static class ExcelExportService
     {
         using var wb = new XLWorkbook();
         var ws = wb.Worksheets.Add("Dispositivos");
-        var headers = new[] { "Nome do dispositivo", "Fabricante", "IP", "Máscara", "Gateway", "MAC", "Função", "IP atribuído" };
+        var headers = new[] { "Nome do dispositivo", "Fabricante", "VendorID", "DeviceID", "IP", "Máscara", "Gateway", "MAC", "Função", "IP atribuído" };
         WriteHeader(ws, headers);
 
         int r = 2;
@@ -20,12 +20,14 @@ public static class ExcelExportService
         {
             ws.Cell(r, 1).Value = d.DeviceName;
             ws.Cell(r, 2).Value = d.DeviceVendor;
-            ws.Cell(r, 3).Value = d.IpAddress;
-            ws.Cell(r, 4).Value = d.SubnetMask;
-            ws.Cell(r, 5).Value = d.Gateway;
-            ws.Cell(r, 6).Value = d.MacAddress;
-            ws.Cell(r, 7).Value = d.DeviceRole;
-            ws.Cell(r, 8).Value = d.HasIp ? "Sim" : "Não";
+            ws.Cell(r, 3).Value = $"0x{d.VendorId:X4}";
+            ws.Cell(r, 4).Value = $"0x{d.DeviceId:X4}";
+            ws.Cell(r, 5).Value = d.IpAddress;
+            ws.Cell(r, 6).Value = d.SubnetMask;
+            ws.Cell(r, 7).Value = d.Gateway;
+            ws.Cell(r, 8).Value = d.MacAddress;
+            ws.Cell(r, 9).Value = d.DeviceRole;
+            ws.Cell(r, 10).Value = d.HasIp ? "Sim" : "Não";
             r++;
         }
         Finish(ws, headers.Length);

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/vers%C3%A3o-1.2.2-2563EB">
+  <img src="https://img.shields.io/badge/vers%C3%A3o-1.2.3-2563EB">
   <img src="https://img.shields.io/badge/plataforma-Windows%2010%20%7C%2011%20%7C%20Server%202012%2B-0F1B2D">
   <img src="https://img.shields.io/badge/.NET-8.0%20(WPF)-512BD4">
   <img src="https://img.shields.io/badge/licen%C3%A7a-MIT-16A34A">

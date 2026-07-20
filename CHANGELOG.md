@@ -2,6 +2,10 @@
 
 Todas as mudanças notáveis do ScanProfinet.
 
+## [1.2.3] — 2026-07-20
+### Adicionado
+- Export do Scan inclui VendorID e DeviceID (identidade do modelo, base para imagens reais de device).
+
 ## [1.2.2] — 2026-07-20
 ### Adicionado
 - Topologia: **ícones por tipo de dispositivo** (CLP/switch/IO) no diagrama.
