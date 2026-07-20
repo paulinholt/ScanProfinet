@@ -24,8 +24,10 @@ public static class LldpTopologyService
     private const int SnmpParallelism = 16;
 
     /// <summary>Descobre dispositivos por DCP e consulta a topologia LLDP via SNMP.</summary>
-    public static async Task<TopologyResult> DiscoverAsync(int interfaceIndex, int dcpTimeoutMs, int snmpTimeoutMs, IProgress<string>? progress = null)
+    public static async Task<TopologyResult> DiscoverAsync(int interfaceIndex, int dcpTimeoutMs, int snmpTimeoutMs,
+        string community = "public", IProgress<string>? progress = null)
     {
+        if (string.IsNullOrWhiteSpace(community)) community = "public";
         var result = new TopologyResult();
 
         progress?.Report("Descobrindo dispositivos (DCP)...");
@@ -45,7 +47,7 @@ public static class LldpTopologyService
             new ParallelOptions { MaxDegreeOfParallelism = SnmpParallelism },
             async (dev, _) =>
             {
-                var links = await Task.Run(() => QueryDevice(dev, snmpTimeoutMs));
+                var links = await Task.Run(() => QueryDevice(dev, snmpTimeoutMs, community));
                 if (links.Count > 0)
                 {
                     Interlocked.Increment(ref answered);
@@ -65,13 +67,13 @@ public static class LldpTopologyService
         return result;
     }
 
-    private static List<TopologyLink> QueryDevice(ProfinetDevice dev, int timeout)
+    private static List<TopologyLink> QueryDevice(ProfinetDevice dev, int timeout, string communityName)
     {
         var links = new List<TopologyLink>();
         try
         {
             var ep = new IPEndPoint(IPAddress.Parse(dev.IpAddress), 161);
-            var community = new OctetString("public");
+            var community = new OctetString(communityName);
 
             string localName = string.IsNullOrWhiteSpace(dev.DeviceName)
                 ? (TryGetScalar(ep, community, OidLocSysName, timeout) ?? dev.IpAddress)

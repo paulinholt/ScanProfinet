@@ -23,6 +23,7 @@ public partial class TopologyViewModel : ObservableObject
     [ObservableProperty] private int _scanSeconds = 5;
     [ObservableProperty] private bool _dedupe = true;
     [ObservableProperty] private int _selectedInterfaceIndex = -1;
+    [ObservableProperty] private string _snmpCommunity = "public";
 
     [ObservableProperty] private int _devicesScanned;
     [ObservableProperty] private int _devicesAnswered;
@@ -135,7 +136,7 @@ public partial class TopologyViewModel : ObservableObject
         {
             var iface = Interfaces[SelectedInterfaceIndex];
             var progress = new Progress<string>(m => StatusText = m);
-            var result = await LldpTopologyService.DiscoverAsync(iface.Index, ScanSeconds * 1000, 1000, progress);
+            var result = await LldpTopologyService.DiscoverAsync(iface.Index, ScanSeconds * 1000, 1000, SnmpCommunity, progress);
 
             _allLinks.AddRange(result.Links);
             DevicesScanned = result.DevicesScanned;

@@ -36,6 +36,11 @@
                         <ComboBoxItem Content="12 s" Tag="12"/>
                     </ComboBox>
                 </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,18,4"
+                            ToolTip="Comunidade SNMP dos dispositivos (padrão 'public'). Mude se a planta usar outra.">
+                    <TextBlock Text="Comunidade SNMP" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,12,0"/>
+                    <TextBox Width="120" VerticalAlignment="Center" Text="{Binding SnmpCommunity, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
                 <Button Content="Mapear topologia" Style="{StaticResource BtnPrimary}"
                         Command="{Binding MapCommand}" IsEnabled="{Binding IsNpcapAvailable}" MinWidth="170" Margin="0,4,16,4"/>
                 <CheckBox Content="Ocultar duplicadas (A↔B)" IsChecked="{Binding Dedupe}" VerticalAlignment="Center" Margin="0,4,0,4"/>

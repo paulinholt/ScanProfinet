@@ -2,8 +2,11 @@
 
 Todas as mudanças notáveis do ScanProfinet.
 
-## [Não lançado] — 1.2.0
+## [1.2.0] — 2026-07-20
 ### Adicionado
+- **Exportar Excel (.xlsx)** nas telas Scan, Comparar e Topologia (colunas por
+  device/IP/máscara/gateway/MAC/fabricante/função; cabeçalho congelado e autofiltro).
+- Topologia: **comunidade SNMP configurável** (padrão `public`).
 - **Aba Topologia (LLDP)**: mapa de vizinhança porta a porta, lido via SNMP
   (LLDP-MIB) de cada dispositivo — mostra quem está ligado em quem. Requer SNMP
   habilitado nos devices.
