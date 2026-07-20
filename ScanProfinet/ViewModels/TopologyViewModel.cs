@@ -227,6 +227,28 @@ public partial class TopologyViewModel : ObservableObject
         RefreshTopologies();
     }
 
+    [RelayCommand]
+    private void ExportExcel()
+    {
+        if (_allLinks.Count == 0)
+        {
+            MessageBox.Show("Mapeie a topologia antes de exportar.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        var path = ExportHelper.AskPath($"ScanProfinet_topologia_{DateTime.Now:yyyy-MM-dd_HHmm}.xlsx");
+        if (path == null) return;
+        try
+        {
+            ExcelExportService.ExportTopology(Deduped(), path);
+            ExportHelper.OfferOpen(path);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Falha ao exportar topologia", ex);
+            MessageBox.Show($"Erro ao exportar:\n{ex.Message}", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     [RelayCommand] private void ShowTable() => View = TopoView.Tabela;
     [RelayCommand] private void ShowDiagram() => View = TopoView.Diagrama;
     [RelayCommand] private void ZoomIn() => Zoom = Math.Min(2.5, Zoom + 0.15);

@@ -44,7 +44,10 @@
                         Command="{Binding ScanNowCommand}" Margin="0,4,10,4" MinWidth="150"
                         ToolTip="Necessário apenas quando 'Comparar com' = Rede atual"/>
                 <Button Content="Comparar" Style="{StaticResource BtnSuccess}"
-                        Command="{Binding CompareCommand}" Margin="0,4,0,4" MinWidth="120"/>
+                        Command="{Binding CompareCommand}" Margin="0,4,10,4" MinWidth="120"/>
+                <Button Content="Exportar Excel" Style="{StaticResource BtnGhost}"
+                        Command="{Binding ExportExcelCommand}" IsEnabled="{Binding HasResult}"
+                        Margin="0,4,0,4" MinWidth="130"/>
             </WrapPanel>
         </Border>
 

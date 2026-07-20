@@ -153,6 +153,28 @@ public partial class CompareViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ExportExcel()
+    {
+        if (Result == null || Rows.Count == 0)
+        {
+            MessageBox.Show("Faça uma comparação antes de exportar.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        var path = ExportHelper.AskPath($"ScanProfinet_comparacao_{DateTime.Now:yyyy-MM-dd_HHmm}.xlsx");
+        if (path == null) return;
+        try
+        {
+            ExcelExportService.ExportCompare(Result, path);
+            ExportHelper.OfferOpen(path);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Falha ao exportar comparação", ex);
+            MessageBox.Show($"Erro ao exportar:\n{ex.Message}", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
     private void DeleteReference()
     {
         if (SelectedReference == null) return;

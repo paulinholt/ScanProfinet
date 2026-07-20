@@ -63,6 +63,9 @@
                     <Button Content="Salvar rede" Style="{StaticResource BtnSuccess}"
                             Command="{Binding SaveSnapshotCommand}" IsEnabled="{Binding HasDevices}"
                             Margin="12,0,0,0" MinWidth="130"/>
+                    <Button Content="Exportar Excel" Style="{StaticResource BtnGhost}"
+                            Command="{Binding ExportExcelCommand}" IsEnabled="{Binding HasDevices}"
+                            Margin="12,0,0,0" MinWidth="130"/>
                 </StackPanel>
             </Grid>
         </Border>

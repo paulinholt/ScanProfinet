@@ -91,7 +91,9 @@
                 </StackPanel>
 
                 <Button Content="Salvar topologia" Style="{StaticResource BtnSuccess}"
-                        Command="{Binding SaveTopologyCommand}" Margin="0,4,18,4" MinWidth="150"/>
+                        Command="{Binding SaveTopologyCommand}" Margin="0,4,8,4" MinWidth="150"/>
+                <Button Content="Exportar Excel" Style="{StaticResource BtnGhost}"
+                        Command="{Binding ExportExcelCommand}" Margin="0,4,18,4" MinWidth="130"/>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,8,4">
                     <TextBlock Text="Comparar com:" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,8,0"/>

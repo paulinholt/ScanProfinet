@@ -219,6 +219,29 @@ public partial class ScanViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ExportExcel()
+    {
+        if (Devices.Count == 0)
+        {
+            MessageBox.Show("Escaneie a rede antes de exportar.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        var path = ExportHelper.AskPath($"ScanProfinet_scan_{DateTime.Now:yyyy-MM-dd_HHmm}.xlsx");
+        if (path == null) return;
+        try
+        {
+            ExcelExportService.ExportScan(Devices, path);
+            StatusText = $"Exportado: {path}";
+            ExportHelper.OfferOpen(path);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Falha ao exportar Excel", ex);
+            MessageBox.Show($"Erro ao exportar:\n{ex.Message}", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
     private void SaveSnapshot()
     {
         if (Devices.Count == 0)
