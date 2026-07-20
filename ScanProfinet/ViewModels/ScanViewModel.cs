@@ -29,9 +29,25 @@ public partial class ScanViewModel : ObservableObject
 
     public ObservableCollection<NetworkInterfaceInfo> Interfaces { get; } = new();
     public ObservableCollection<ProfinetDevice> Devices { get; } = new();
-    public ObservableCollection<ProfinetDevice> FilteredDevices { get; } = new();
+    public ObservableCollection<ProfinetDevice> DevicesWithIp { get; } = new();
+    public ObservableCollection<ProfinetDevice> DevicesWithoutIp { get; } = new();
+
+    [ObservableProperty] private bool _hasScanned;
 
     public bool HasDevices => Devices.Count > 0;
+    public int TotalCount => Devices.Count;
+    public int WithIpCount => Devices.Count(d => d.HasIp);
+    public int WithoutIpCount => Devices.Count(d => !d.HasIp);
+    public bool HasWithoutIp => WithoutIpCount > 0;
+
+    private void RefreshCounts()
+    {
+        OnPropertyChanged(nameof(HasDevices));
+        OnPropertyChanged(nameof(TotalCount));
+        OnPropertyChanged(nameof(WithIpCount));
+        OnPropertyChanged(nameof(WithoutIpCount));
+        OnPropertyChanged(nameof(HasWithoutIp));
+    }
 
     /// <summary>Disparado quando uma rede é salva (para atualizar o painel de redes salvas).</summary>
     public event Action? SnapshotsChanged;
@@ -72,28 +88,30 @@ public partial class ScanViewModel : ObservableObject
     {
         if (value != null)
         {
-            NewIp = value.IpAddress;
+            NewIp = value.HasIp ? value.IpAddress : "";
             NewMask = value.SubnetMask == "0.0.0.0" ? "255.255.255.0" : value.SubnetMask;
-            NewGateway = value.Gateway;
+            NewGateway = value.HasIp ? value.Gateway : "0.0.0.0";
             NewDeviceName = value.DeviceName;
         }
     }
 
     private void ApplyFilter()
     {
-        FilteredDevices.Clear();
+        DevicesWithIp.Clear();
+        DevicesWithoutIp.Clear();
         var f = FilterText.Trim();
         foreach (var d in Devices)
         {
-            if (string.IsNullOrEmpty(f)
+            bool match = string.IsNullOrEmpty(f)
                 || d.DeviceName.Contains(f, StringComparison.OrdinalIgnoreCase)
                 || d.IpAddress.Contains(f, StringComparison.OrdinalIgnoreCase)
                 || d.MacAddress.Contains(f, StringComparison.OrdinalIgnoreCase)
                 || d.DeviceVendor.Contains(f, StringComparison.OrdinalIgnoreCase)
-                || d.DeviceRole.Contains(f, StringComparison.OrdinalIgnoreCase))
-            {
-                FilteredDevices.Add(d);
-            }
+                || d.DeviceRole.Contains(f, StringComparison.OrdinalIgnoreCase);
+            if (!match) continue;
+
+            if (d.HasIp) DevicesWithIp.Add(d);
+            else DevicesWithoutIp.Add(d);
         }
     }
 
@@ -109,8 +127,9 @@ public partial class ScanViewModel : ObservableObject
 
         IsScanning = true;
         Devices.Clear();
-        FilteredDevices.Clear();
-        OnPropertyChanged(nameof(HasDevices));
+        DevicesWithIp.Clear();
+        DevicesWithoutIp.Clear();
+        RefreshCounts();
 
         try
         {
@@ -120,10 +139,11 @@ public partial class ScanViewModel : ObservableObject
 
             foreach (var d in found) Devices.Add(d);
             ApplyFilter();
-            OnPropertyChanged(nameof(HasDevices));
+            HasScanned = true;
+            RefreshCounts();
             StatusText = found.Count == 0
                 ? "Nenhum dispositivo respondeu. Verifique cabo, placa selecionada e alimentação."
-                : $"{found.Count} dispositivo(s) encontrado(s).";
+                : $"{found.Count} dispositivo(s) encontrado(s): {WithIpCount} com IP, {WithoutIpCount} sem IP.";
         }
         catch (Exception ex)
         {

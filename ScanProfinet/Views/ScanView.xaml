@@ -78,48 +78,88 @@
             </StackPanel>
         </Border>
 
-        <!-- Conteúdo: grid + filtro -->
+        <!-- Conteúdo: contagens + grids -->
         <Grid Grid.Row="3" Visibility="{Binding IsNpcapAvailable, Converter={StaticResource BoolToVis}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <DockPanel Grid.Row="0" Margin="0,0,0,8">
-                <TextBlock Text="Filtrar:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                <TextBox Width="260" HorizontalAlignment="Left"
-                         Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Filtra por nome, IP, MAC, fabricante ou função"/>
+            <!-- Contagens + filtro -->
+            <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Filtrar:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
+                    <TextBox Width="240" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Filtra por nome, IP, MAC, fabricante ou função"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                            Visibility="{Binding HasScanned, Converter={StaticResource BoolToVis}}">
+                    <Border Style="{StaticResource Pill}" Background="#E0EAFF" Margin="0,0,8,0" Padding="12,3">
+                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#2563EB">
+                            <Run Text="Total: "/><Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Border>
+                    <Border Style="{StaticResource Pill}" Background="#DCFCE7" Margin="0,0,8,0" Padding="12,3">
+                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#16A34A">
+                            <Run Text="Com IP: "/><Run Text="{Binding WithIpCount, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Border>
+                    <Border Style="{StaticResource Pill}" Background="#FEF3C7" Padding="12,3">
+                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#B45309">
+                            <Run Text="Sem IP: "/><Run Text="{Binding WithoutIpCount, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
             </DockPanel>
 
-            <DataGrid Grid.Row="1" ItemsSource="{Binding FilteredDevices}" SelectedItem="{Binding SelectedDevice}">
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IpAddress}" Value="0.0.0.0">
-                                <Setter Property="ToolTip" Value="Dispositivo sem IP atribuído"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
+            <!-- Grid principal: dispositivos com IP -->
+            <DataGrid Grid.Row="1" ItemsSource="{Binding DevicesWithIp}" SelectedItem="{Binding SelectedDevice}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Nome do dispositivo" Binding="{Binding DeviceName}" Width="200">
+                    <DataGridTextColumn Header="Nome do dispositivo" Binding="{Binding DeviceName}" Width="2*" MinWidth="150">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock"><Setter Property="FontWeight" Value="SemiBold"/></Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="IP" Binding="{Binding IpAddress}" Width="130"/>
-                    <DataGridTextColumn Header="Máscara" Binding="{Binding SubnetMask}" Width="130"/>
-                    <DataGridTextColumn Header="Gateway" Binding="{Binding Gateway}" Width="130"/>
-                    <DataGridTextColumn Header="MAC" Binding="{Binding MacAddress}" Width="150">
+                    <DataGridTextColumn Header="Fabricante" Binding="{Binding DeviceVendor}" Width="1.4*" MinWidth="100"/>
+                    <DataGridTextColumn Header="IP" Binding="{Binding IpAddress}" Width="1.1*" MinWidth="100"/>
+                    <DataGridTextColumn Header="Máscara" Binding="{Binding SubnetMask}" Width="1.1*" MinWidth="100"/>
+                    <DataGridTextColumn Header="Gateway" Binding="{Binding Gateway}" Width="1.1*" MinWidth="100"/>
+                    <DataGridTextColumn Header="MAC" Binding="{Binding MacAddress}" Width="1.4*" MinWidth="130">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#64748B"/></Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="Fabricante" Binding="{Binding DeviceVendor}" Width="130"/>
-                    <DataGridTextColumn Header="Função" Binding="{Binding DeviceRole}" Width="110"/>
+                    <DataGridTextColumn Header="Função" Binding="{Binding DeviceRole}" Width="1*" MinWidth="90"/>
                 </DataGrid.Columns>
             </DataGrid>
+
+            <!-- Grid separado: dispositivos SEM IP (novos / não configurados) -->
+            <StackPanel Grid.Row="2" Margin="0,14,0,0"
+                        Visibility="{Binding HasWithoutIp, Converter={StaticResource BoolToVis}}">
+                <TextBlock Margin="0,0,0,6">
+                    <Run Text="Dispositivos sem IP" FontWeight="Bold" FontSize="13.5"/>
+                    <Run Text="  — novos ou não configurados (" Foreground="#64748B" FontSize="12.5"/><Run Text="{Binding WithoutIpCount, Mode=OneWay}" Foreground="#64748B" FontSize="12.5"/><Run Text=")" Foreground="#64748B" FontSize="12.5"/>
+                </TextBlock>
+                <DataGrid ItemsSource="{Binding DevicesWithoutIp}" SelectedItem="{Binding SelectedDevice}"
+                          MaxHeight="200" BorderBrush="#FCD34D">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nome do dispositivo" Binding="{Binding DeviceName}" Width="2*" MinWidth="150">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="FontWeight" Value="SemiBold"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Fabricante" Binding="{Binding DeviceVendor}" Width="1.4*" MinWidth="100"/>
+                        <DataGridTextColumn Header="MAC" Binding="{Binding MacAddress}" Width="1.6*" MinWidth="140">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#64748B"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Função" Binding="{Binding DeviceRole}" Width="1*" MinWidth="90"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
         </Grid>
 
         <!-- Painel de ação (device selecionado) -->
