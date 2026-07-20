@@ -107,8 +107,9 @@ public partial class TopologyView : UserControl
             throw new InvalidOperationException("Diagrama vazio.");
         }
 
-        // Limita para não estourar memória em redes muito grandes.
-        double scale = (w * preferredScale) * (h * preferredScale) > 60_000_000 ? 1.0 : preferredScale;
+        // Limita para não estourar memória em redes muito grandes (teto alto p/ manter nitidez).
+        double scale = preferredScale;
+        while (scale > 1.0 && (w * scale) * (h * scale) > 150_000_000) scale -= 0.25;
 
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())

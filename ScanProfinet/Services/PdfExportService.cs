@@ -26,6 +26,7 @@ public static class PdfExportService
                 int h = Math.Min(pageH, H - y);
                 if (w <= 0 || h <= 0) continue;
                 var crop = new CroppedBitmap(full, new Int32Rect(x, y, w, h));
+                if (!HasContent(crop)) continue;   // não gera página em branco
                 tiles.Add(Encode(crop));
             }
         }
@@ -47,10 +48,26 @@ public static class PdfExportService
                         row.RelativeItem().Text(title).SemiBold().FontSize(11);
                         row.ConstantItem(140).AlignRight().Text($"Página {pageNum}/{total}").FontSize(10);
                     });
-                    p.Content().PaddingTop(6).Image(bytes).FitArea();
+                    p.Content().PaddingTop(6).Image(bytes).FitArea().UseOriginalImage();
                 });
             }
         }).GeneratePdf(path);
+    }
+
+    /// <summary>Verdadeiro se o tile tem algum pixel não-branco (evita página em branco).</summary>
+    private static bool HasContent(BitmapSource bmp)
+    {
+        int w = bmp.PixelWidth, h = bmp.PixelHeight;
+        if (w < 1 || h < 1) return false;
+        int stride = w * 4;
+        var row = new byte[stride];
+        for (int y = 0; y < h; y += 6)
+        {
+            try { bmp.CopyPixels(new Int32Rect(0, y, w, 1), row, stride, 0); } catch { return true; }
+            for (int i = 0; i < stride; i += 16) // amostra 1 a cada 4 px (BGRA)
+                if (row[i] < 244 || row[i + 1] < 244 || row[i + 2] < 244) return true;
+        }
+        return false;
     }
 
     private static byte[] Encode(BitmapSource bmp)
