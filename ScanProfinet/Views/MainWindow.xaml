@@ -88,6 +88,8 @@
                                  IsChecked="{Binding IsCompare, Mode=OneWay}" Command="{Binding GoCompareCommand}"/>
                     <RadioButton Style="{StaticResource NavButton}" Content="Monitor de rede" Tag="📈"
                                  IsChecked="{Binding IsMonitor, Mode=OneWay}" Command="{Binding GoMonitorCommand}"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="Topologia" Tag="🔗"
+                                 IsChecked="{Binding IsTopology, Mode=OneWay}" Command="{Binding GoTopologyCommand}"/>
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -100,6 +102,8 @@
                                Visibility="{Binding DataContext.IsCompare, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
             <views:MonitorView DataContext="{Binding Monitor}"
                                Visibility="{Binding DataContext.IsMonitor, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
+            <views:TopologyView DataContext="{Binding Topology}"
+                               Visibility="{Binding DataContext.IsTopology, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
 
             <!-- Sobreposição de notificações (toasts) -->
             <ItemsControl ItemsSource="{Binding Notifications.Toasts}" Width="370" Panel.ZIndex="100"
