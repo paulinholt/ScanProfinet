@@ -58,8 +58,28 @@ CREATE TABLE IF NOT EXISTS MonitorEvents (
     Detail     TEXT
 );
 
+CREATE TABLE IF NOT EXISTS TopologySnapshots (
+    Id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name      TEXT NOT NULL,
+    Notes     TEXT,
+    CreatedAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS TopologyLinks (
+    Id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    SnapshotId     INTEGER NOT NULL,
+    LocalDevice    TEXT,
+    LocalIp        TEXT,
+    LocalMac       TEXT,
+    LocalPort      TEXT,
+    NeighborDevice TEXT,
+    NeighborPort   TEXT,
+    FOREIGN KEY (SnapshotId) REFERENCES TopologySnapshots(Id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS IX_SnapshotDevices_Snapshot ON SnapshotDevices(SnapshotId);
 CREATE INDEX IF NOT EXISTS IX_MonitorEvents_Time ON MonitorEvents(Timestamp);
+CREATE INDEX IF NOT EXISTS IX_TopologyLinks_Snapshot ON TopologyLinks(SnapshotId);
 ";
         cmd.ExecuteNonQuery();
         AppLog.Info($"Banco inicializado em {AppPaths.DatabaseFile}");

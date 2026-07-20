@@ -5,8 +5,12 @@ Todas as mudanças notáveis do ScanProfinet.
 ## [Não lançado] — 1.2.0
 ### Adicionado
 - **Aba Topologia (LLDP)**: mapa de vizinhança porta a porta, lido via SNMP
-  (LLDP-MIB) de cada dispositivo — mostra quem está ligado em quem. Base para
-  detectar cabo trocado. Requer SNMP habilitado nos devices.
+  (LLDP-MIB) de cada dispositivo — mostra quem está ligado em quem. Requer SNMP
+  habilitado nos devices.
+  - **Desenho gráfico** da rede (nós + cabos) com layout automático em camadas,
+    zoom e nós arrastáveis; alternável entre Tabela e Diagrama.
+  - **Salvar topologia** e **comparar** com uma salva → detecta **cabo trocado**,
+    ligações que sumiram e ligações novas.
 - **Comparar duas redes salvas** (ex.: ontem × hoje), além de comparar com o scan atual.
 - **Scan**: contagem de escaneados (Total / Com IP / Sem IP) e **grid separado**
   para dispositivos sem IP; coluna Fabricante como 2ª; janela maximizada.

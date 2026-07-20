@@ -39,7 +39,7 @@ public partial class MainViewModel : ObservableObject
         Scan = new ScanViewModel(_repo);
         Compare = new CompareViewModel(_repo, Scan);
         Monitor = new MonitorViewModel(_repo, Scan, Notifications);
-        Topology = new TopologyViewModel(Scan);
+        Topology = new TopologyViewModel(Scan, _repo);
 
         // Quando uma rede é salva ou excluída, atualiza o painel direito.
         Scan.SnapshotsChanged += RefreshSavedNetworks;
@@ -88,6 +88,7 @@ public partial class MainViewModel : ObservableObject
 
         if (value == AppSection.Compare) Compare.RefreshReferences();
         if (value == AppSection.Monitor) Monitor.RefreshSources();
+        if (value == AppSection.Topology) Topology.RefreshTopologies();
     }
 
     [RelayCommand] private void GoScan() => Section = AppSection.Scan;

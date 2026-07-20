@@ -195,4 +195,95 @@ public class SnapshotRepository
         cmd.CommandText = "DELETE FROM MonitorEvents;";
         cmd.ExecuteNonQuery();
     }
+
+    // ===================== Topologia =====================
+
+    public long SaveTopology(string name, string? notes, IEnumerable<TopologyLink> links)
+    {
+        using var conn = Database.Open();
+        using var tx = conn.BeginTransaction();
+
+        long id;
+        using (var cmd = conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = "INSERT INTO TopologySnapshots (Name, Notes, CreatedAt) VALUES ($n,$o,$c); SELECT last_insert_rowid();";
+            cmd.Parameters.AddWithValue("$n", name);
+            cmd.Parameters.AddWithValue("$o", (object?)notes ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$c", DateTime.Now.ToString("O"));
+            id = (long)cmd.ExecuteScalar()!;
+        }
+
+        foreach (var l in links)
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = @"INSERT INTO TopologyLinks
+                (SnapshotId, LocalDevice, LocalIp, LocalMac, LocalPort, NeighborDevice, NeighborPort)
+                VALUES ($s,$ld,$lip,$lmac,$lp,$nd,$np);";
+            cmd.Parameters.AddWithValue("$s", id);
+            cmd.Parameters.AddWithValue("$ld", l.LocalDevice);
+            cmd.Parameters.AddWithValue("$lip", l.LocalIp);
+            cmd.Parameters.AddWithValue("$lmac", l.LocalMac);
+            cmd.Parameters.AddWithValue("$lp", l.LocalPort);
+            cmd.Parameters.AddWithValue("$nd", l.NeighborDevice);
+            cmd.Parameters.AddWithValue("$np", l.NeighborPort);
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
+        return id;
+    }
+
+    public List<TopologySnapshotInfo> ListTopologies()
+    {
+        var result = new List<TopologySnapshotInfo>();
+        using var conn = Database.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT t.Id, t.Name, t.CreatedAt, COUNT(l.Id)
+            FROM TopologySnapshots t
+            LEFT JOIN TopologyLinks l ON l.SnapshotId = t.Id
+            GROUP BY t.Id ORDER BY t.CreatedAt DESC;";
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            result.Add(new TopologySnapshotInfo
+            {
+                Id = r.GetInt64(0),
+                Name = r.GetString(1),
+                CreatedAt = DateTime.Parse(r.GetString(2)),
+                LinkCount = r.GetInt32(3)
+            });
+        return result;
+    }
+
+    public List<TopologyLink> LoadTopologyLinks(long id)
+    {
+        var links = new List<TopologyLink>();
+        using var conn = Database.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"SELECT LocalDevice, LocalIp, LocalMac, LocalPort, NeighborDevice, NeighborPort
+                            FROM TopologyLinks WHERE SnapshotId = $id;";
+        cmd.Parameters.AddWithValue("$id", id);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            links.Add(new TopologyLink
+            {
+                LocalDevice = r.IsDBNull(0) ? "" : r.GetString(0),
+                LocalIp = r.IsDBNull(1) ? "" : r.GetString(1),
+                LocalMac = r.IsDBNull(2) ? "" : r.GetString(2),
+                LocalPort = r.IsDBNull(3) ? "" : r.GetString(3),
+                NeighborDevice = r.IsDBNull(4) ? "" : r.GetString(4),
+                NeighborPort = r.IsDBNull(5) ? "" : r.GetString(5),
+            });
+        return links;
+    }
+
+    public void DeleteTopology(long id)
+    {
+        using var conn = Database.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM TopologySnapshots WHERE Id = $id;";
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.ExecuteNonQuery();
+    }
 }
