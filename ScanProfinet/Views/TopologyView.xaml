@@ -93,6 +93,8 @@
                     <Button Content="–" Command="{Binding ZoomOutCommand}" Style="{StaticResource BtnGhost}" Width="34" Padding="0,4"/>
                     <Button Content="↺" Command="{Binding ZoomResetCommand}" Style="{StaticResource BtnGhost}" Width="34" Padding="0,4" Margin="6,0"/>
                     <Button Content="+" Command="{Binding ZoomInCommand}" Style="{StaticResource BtnGhost}" Width="34" Padding="0,4"/>
+                    <Button Content="Exportar PNG" Style="{StaticResource BtnGhost}" Click="ExportPng_Click"
+                            Padding="12,4" Margin="12,0,0,0" ToolTip="Salva o desenho completo da topologia como imagem"/>
                 </StackPanel>
 
                 <Button Content="Salvar topologia" Style="{StaticResource BtnSuccess}"
@@ -172,7 +174,7 @@
             <Border Visibility="{Binding IsDiagram, Converter={StaticResource BoolToVis}}"
                     BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="8" Background="#FBFCFE">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="4">
-                    <Grid Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
+                    <Grid x:Name="DiagramSurface" Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
                         <Grid.LayoutTransform>
                             <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}"/>
                         </Grid.LayoutTransform>
