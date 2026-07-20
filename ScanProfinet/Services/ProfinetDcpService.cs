@@ -90,10 +90,18 @@ public class ProfinetDcpService
         catch { return false; }
     }
 
-    /// <summary>Escaneia a rede PROFINET (DCP Identify All) e coleta as respostas.</summary>
-    public static async Task<List<ProfinetDevice>> DiscoverAsync(int interfaceIndex, int timeoutMs = 3000, IProgress<string>? progress = null)
+    /// <summary>
+    /// Escaneia a rede PROFINET (DCP Identify All) e coleta as respostas.
+    /// Em redes grandes as respostas chegam em rajada e o driver descarta pacotes;
+    /// por isso: (1) pedimos que os dispositivos ESPALHEM a resposta no tempo
+    /// (campo ResponseDelay) e (2) REENVIAMOS a descoberta algumas vezes,
+    /// acumulando dispositivos únicos por MAC até estabilizar a contagem.
+    /// </summary>
+    public static async Task<List<ProfinetDevice>> DiscoverAsync(int interfaceIndex, int timeoutMs = 5000, IProgress<string>? progress = null)
     {
         var devices = new List<ProfinetDevice>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         var captureDevices = CaptureDeviceList.Instance;
         if (interfaceIndex < 0 || interfaceIndex >= captureDevices.Count)
             throw new ArgumentException($"Interface {interfaceIndex} inválida.");
@@ -101,32 +109,47 @@ public class ProfinetDcpService
         var dev = captureDevices[interfaceIndex];
         try
         {
-            dev.Open(DeviceModes.Promiscuous, 1000);
-            progress?.Report("Interface aberta. Enviando DCP Identify All...");
-
+            dev.Open(DeviceModes.Promiscuous, 100);
             byte[] srcMac = GetSrcMac(dev);
-            dev.SendPacket(BuildIdentifyAllFrame(srcMac));
 
-            progress?.Report($"Aguardando respostas ({timeoutMs / 1000.0:0.#}s)...");
-            var endTime = DateTime.Now.AddMilliseconds(timeoutMs);
+            // ResponseDelayFactor (× ~10ms): espalha as respostas ~60% da janela.
+            ushort delayFactor = (ushort)Math.Clamp((int)(timeoutMs * 0.06), 16, 6000);
+            var identify = BuildIdentifyAllFrame(srcMac, delayFactor);
+
+            progress?.Report("Enviando descoberta DCP...");
+            dev.SendPacket(identify);
+
+            var start = DateTime.Now;
+            var endTime = start.AddMilliseconds(timeoutMs);
+            var nextResend = start.AddMilliseconds(Math.Max(400, timeoutMs / 3.0));
 
             await Task.Run(() =>
             {
                 while (DateTime.Now < endTime)
                 {
+                    // Reenvia a descoberta nos primeiros ~60% da janela (cobre request/resposta perdidos).
+                    if (DateTime.Now >= nextResend && (endTime - DateTime.Now).TotalMilliseconds > timeoutMs * 0.6)
+                    {
+                        try { dev.SendPacket(identify); } catch { }
+                        nextResend = DateTime.Now.AddMilliseconds(Math.Max(400, timeoutMs / 3.0));
+                    }
+
                     if (dev.GetNextPacket(out var capture) != GetPacketStatus.PacketRead) continue;
                     var data = capture.Data.ToArray();
                     if (!IsDcpFrame(data, FrameIdIdentifyResponse)) continue;
                     if (data[16] != ServiceIdIdentify || data[17] != ServiceTypeResponse) continue;
 
                     var device = ParseIdentifyResponse(data);
-                    if (device != null && !devices.Any(d => d.Key == device.Key))
+                    if (device != null && seen.Add(device.Key))
+                    {
                         devices.Add(device);
+                        progress?.Report($"Descobrindo... {devices.Count} dispositivo(s)");
+                    }
                 }
             });
 
             progress?.Report($"Scan concluído: {devices.Count} dispositivo(s).");
-            AppLog.Info($"Scan DCP: {devices.Count} dispositivos na interface #{interfaceIndex}");
+            AppLog.Info($"Scan DCP: {devices.Count} dispositivos (interface #{interfaceIndex}, janela {timeoutMs}ms, delayFactor {delayFactor})");
         }
         finally
         {
@@ -163,7 +186,7 @@ public class ProfinetDcpService
         return frameId == expectedFrameId;
     }
 
-    private static byte[] BuildIdentifyAllFrame(byte[] srcMac)
+    private static byte[] BuildIdentifyAllFrame(byte[] srcMac, ushort responseDelayFactor)
     {
         var frame = new byte[60];
         Array.Copy(DcpMulticastMac, 0, frame, 0, 6);
@@ -178,7 +201,8 @@ public class ProfinetDcpService
         uint xid = (uint)Random.Shared.Next();
         frame[18] = (byte)(xid >> 24); frame[19] = (byte)(xid >> 16);
         frame[20] = (byte)(xid >> 8);  frame[21] = (byte)(xid & 0xFF);
-        frame[22] = 0x00; frame[23] = 0x01; // response delay factor
+        frame[22] = (byte)(responseDelayFactor >> 8);   // ResponseDelayFactor: espalha as respostas
+        frame[23] = (byte)(responseDelayFactor & 0xFF);
         frame[24] = 0x00; frame[25] = 0x04; // data length = 4
         frame[26] = OptionAll;
         frame[27] = SuboptionAll;

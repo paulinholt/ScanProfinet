@@ -275,6 +275,12 @@
         </Style.Triggers>
     </Style>
 
+    <!-- ============ Item de ComboBox (mostra a propriedade Display) ============ -->
+    <!-- Usado no lugar de DisplayMemberPath, que não flui no template custom do ComboBox. -->
+    <DataTemplate x:Key="DisplayItemTemplate">
+        <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    </DataTemplate>
+
     <!-- ============ Pílula de estado ============ -->
     <Style x:Key="Pill" TargetType="Border">
         <Setter Property="CornerRadius" Value="10"/>

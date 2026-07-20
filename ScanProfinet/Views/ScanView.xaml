@@ -39,7 +39,7 @@
                 <ComboBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"
                           ItemsSource="{Binding Interfaces}"
                           SelectedIndex="{Binding SelectedInterfaceIndex}"
-                          DisplayMemberPath="Display"
+                          ItemTemplate="{StaticResource DisplayItemTemplate}"
                           IsEnabled="{Binding IsNpcapAvailable}"/>
 
                 <TextBlock Grid.Row="0" Grid.Column="3" Text="Tempo de escuta" VerticalAlignment="Center"
@@ -52,6 +52,7 @@
                     <ComboBoxItem Content="3 s" Tag="3"/>
                     <ComboBoxItem Content="5 s" Tag="5"/>
                     <ComboBoxItem Content="8 s" Tag="8"/>
+                    <ComboBoxItem Content="12 s" Tag="12"/>
                 </ComboBox>
 
                 <!-- Linha 2: ações -->

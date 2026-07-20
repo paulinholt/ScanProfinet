@@ -26,7 +26,7 @@
                                FontWeight="SemiBold" FontSize="12.5" Margin="0,0,8,0"/>
                     <ComboBox Width="260" VerticalAlignment="Center"
                               ItemsSource="{Binding Sources}" SelectedItem="{Binding SelectedSource}"
-                              DisplayMemberPath="Display"/>
+                              ItemTemplate="{StaticResource DisplayItemTemplate}"/>
                 </StackPanel>
 
                 <Button Content="Carregar dispositivos" Style="{StaticResource BtnGhost}"
@@ -47,7 +47,7 @@
                     <CheckBox Content="Detectar novos" IsChecked="{Binding DetectNewDevices}" VerticalAlignment="Center"/>
                     <ComboBox Width="200" Margin="10,0,0,0" VerticalAlignment="Center"
                               ItemsSource="{Binding Interfaces}" SelectedIndex="{Binding SelectedScanInterfaceIndex}"
-                              DisplayMemberPath="Display" IsEnabled="{Binding DetectNewDevices}"
+                              ItemTemplate="{StaticResource DisplayItemTemplate}" IsEnabled="{Binding DetectNewDevices}"
                               ToolTip="Placa de rede usada no re-scan"/>
                     <ComboBox Width="78" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding DetectNewDevices}"
                               SelectedValuePath="Tag" SelectedValue="{Binding RescanSeconds}" ToolTip="Intervalo do re-scan">
@@ -68,7 +68,23 @@
         </Border>
 
         <!-- Alvos monitorados -->
-        <DataGrid Grid.Row="2" ItemsSource="{Binding Targets}" CanUserSortColumns="False">
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <DockPanel Grid.Row="0" Margin="0,0,0,8" LastChildFill="False">
+                <TextBlock DockPanel.Dock="Left" Text="{Binding SelectionText}" VerticalAlignment="Center"
+                           FontSize="12.5" FontWeight="SemiBold"/>
+                <Button DockPanel.Dock="Right" Content="Limpar" Style="{StaticResource BtnGhost}"
+                        Command="{Binding ClearSelectionCommand}" Padding="12,5" Margin="8,0,0,0"/>
+                <Button DockPanel.Dock="Right" Content="Selecionar 50" Style="{StaticResource BtnGhost}"
+                        Command="{Binding SelectFirstBatchCommand}" Padding="12,5"
+                        ToolTip="Marca os primeiros 50 dispositivos da lista"/>
+            </DockPanel>
+
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Targets}" CanUserSortColumns="False">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Mon." Width="46">
                     <DataGridTemplateColumn.CellTemplate>
@@ -120,7 +136,8 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
-        </DataGrid>
+            </DataGrid>
+        </Grid>
 
         <!-- Cabeçalho do log -->
         <DockPanel Grid.Row="3" Margin="0,16,0,8">

@@ -19,7 +19,7 @@ public partial class MonitorTarget : ObservableObject
     public string DeviceName { get; set; } = "";
     public string MacAddress { get; set; } = "";
 
-    [ObservableProperty] private bool _isSelected = true;
+    [ObservableProperty] private bool _isSelected;
     [ObservableProperty] private MonitorState _state = MonitorState.Unknown;
     [ObservableProperty] private long _lastLatencyMs = -1;
     [ObservableProperty] private double _lossPercent;

@@ -37,6 +37,9 @@ public class PingMonitorService
     public int ScanInterfaceIndex { get; set; } = -1;
     public int RescanIntervalMs { get; set; } = 20000;
 
+    /// <summary>Máximo de dispositivos pingados simultaneamente.</summary>
+    public int MaxPingTargets { get; set; } = 50;
+
     public bool IsRunning => _cts != null && !_cts.IsCancellationRequested;
 
     /// <summary>Disparado (na UI) sempre que um evento é registrado.</summary>
@@ -250,16 +253,25 @@ public class PingMonitorService
                 IsSelected = true
             };
 
-            // Se tiver IP, passa a ser pingado também.
+            // Se tiver IP e ainda houver espaço, passa a ser pingado também.
+            bool pinging = false;
             if (dev.HasIp)
             {
-                lock (_sync) _contexts.Add(new Context(target));
-                TargetAdded?.Invoke(target);
+                lock (_sync)
+                {
+                    if (_contexts.Count < MaxPingTargets)
+                    {
+                        _contexts.Add(new Context(target));
+                        pinging = true;
+                    }
+                }
+                if (pinging) TargetAdded?.Invoke(target);
             }
 
             string ipInfo = dev.HasIp ? dev.IpAddress : "sem IP";
+            string extra = dev.HasIp && !pinging ? " [não monitorado: limite de dispositivos atingido]" : "";
             RaiseEvent(dev.IpAddress, target.DeviceName, "ADICIONADO",
-                $"Novo dispositivo na rede — {target.DeviceName} (IP {ipInfo}, MAC {dev.MacAddress}, fab. {(!string.IsNullOrWhiteSpace(dev.DeviceVendor) ? dev.DeviceVendor : "?")}).");
+                $"Novo dispositivo na rede — {target.DeviceName} (IP {ipInfo}, MAC {dev.MacAddress}, fab. {(!string.IsNullOrWhiteSpace(dev.DeviceVendor) ? dev.DeviceVendor : "?")}).{extra}");
         });
     }
 

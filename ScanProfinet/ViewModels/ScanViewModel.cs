@@ -19,7 +19,7 @@ public partial class ScanViewModel : ObservableObject
     [ObservableProperty] private int _selectedInterfaceIndex = -1;
     [ObservableProperty] private ProfinetDevice? _selectedDevice;
     [ObservableProperty] private string _filterText = "";
-    [ObservableProperty] private int _scanSeconds = 3;
+    [ObservableProperty] private int _scanSeconds = 5;
 
     // Campos de configuração (Set IP / Name)
     [ObservableProperty] private string _newIp = "";

@@ -15,10 +15,17 @@ public partial class MonitorViewModel : ObservableObject
     private readonly NotificationService _notify;
     private readonly PingMonitorService _monitor;
 
+    /// <summary>Máximo de dispositivos monitorados simultaneamente.</summary>
+    public const int MaxTargets = 50;
+
     [ObservableProperty] private string _statusText = "Carregue os dispositivos e inicie o monitoramento.";
     [ObservableProperty] private bool _isRunning;
     [ObservableProperty] private object? _selectedSource;
     [ObservableProperty] private int _intervalSeconds = 2;
+    [ObservableProperty] private int _selectedCount;
+
+    public string SelectionText => $"{SelectedCount} de {Targets.Count} selecionado(s)  ·  máximo {MaxTargets}";
+    public int MaxTargetsValue => MaxTargets;
 
     // Detecção de novos dispositivos (re-scan DCP)
     [ObservableProperty] private bool _detectNewDevices = true;
@@ -76,6 +83,7 @@ public partial class MonitorViewModel : ObservableObject
     [RelayCommand]
     private void LoadTargets()
     {
+        foreach (var t in Targets) t.PropertyChanged -= OnTargetPropertyChanged;
         Targets.Clear();
         var opt = SelectedSource as SourceOption ?? Sources.FirstOrDefault();
         if (opt == null) return;
@@ -90,17 +98,48 @@ public partial class MonitorViewModel : ObservableObject
         foreach (var d in devices)
         {
             if (!d.HasIp) { skipped++; continue; }
-            Targets.Add(new MonitorTarget
+            var t = new MonitorTarget
             {
                 IpAddress = d.IpAddress,
                 DeviceName = string.IsNullOrWhiteSpace(d.DeviceName) ? d.IpAddress : d.DeviceName,
                 MacAddress = d.MacAddress
-            });
+            };
+            t.PropertyChanged += OnTargetPropertyChanged;
+            Targets.Add(t);
         }
+        RecomputeSelected();
 
         StatusText = Targets.Count == 0
             ? "Nenhum dispositivo com IP válido para monitorar." + (skipped > 0 ? $" ({skipped} sem IP)" : "")
-            : $"{Targets.Count} dispositivo(s) carregado(s)." + (skipped > 0 ? $" {skipped} sem IP ignorado(s)." : "");
+            : $"{Targets.Count} dispositivo(s) carregado(s). Marque até {MaxTargets} para monitorar." + (skipped > 0 ? $" {skipped} sem IP ignorado(s)." : "");
+    }
+
+    private void OnTargetPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MonitorTarget.IsSelected)) RecomputeSelected();
+    }
+
+    private void RecomputeSelected()
+    {
+        SelectedCount = Targets.Count(t => t.IsSelected);
+        OnPropertyChanged(nameof(SelectionText));
+    }
+
+    [RelayCommand]
+    private void SelectFirstBatch()
+    {
+        int n = 0;
+        foreach (var t in Targets)
+            t.IsSelected = n++ < MaxTargets;
+        RecomputeSelected();
+        StatusText = $"{Math.Min(Targets.Count, MaxTargets)} primeiro(s) dispositivo(s) selecionado(s).";
+    }
+
+    [RelayCommand]
+    private void ClearSelection()
+    {
+        foreach (var t in Targets) t.IsSelected = false;
+        RecomputeSelected();
     }
 
     [RelayCommand]
@@ -109,8 +148,16 @@ public partial class MonitorViewModel : ObservableObject
         var selected = Targets.Where(t => t.IsSelected).ToList();
         if (selected.Count == 0 && !DetectNewDevices)
         {
-            MessageBox.Show("Carregue e selecione ao menos um dispositivo, ou ative a detecção de novos dispositivos.",
+            MessageBox.Show("Marque ao menos um dispositivo (use 'Selecionar 50'), ou ative a detecção de novos dispositivos.",
                 "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (selected.Count > MaxTargets)
+        {
+            MessageBox.Show($"Você marcou {selected.Count} dispositivos. O máximo é {MaxTargets}.\n\n" +
+                "Use 'Limpar' e depois 'Selecionar 50', ou desmarque alguns.",
+                "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -126,6 +173,7 @@ public partial class MonitorViewModel : ObservableObject
 
         _monitor.IntervalMs = Math.Max(1, IntervalSeconds) * 1000;
         _monitor.DetectNewDevices = DetectNewDevices;
+        _monitor.MaxPingTargets = MaxTargets;
         _monitor.RescanIntervalMs = Math.Max(5, RescanSeconds) * 1000;
         _monitor.ScanInterfaceIndex = DetectNewDevices && SelectedScanInterfaceIndex >= 0
             ? Interfaces[SelectedScanInterfaceIndex].Index : -1;
@@ -158,7 +206,9 @@ public partial class MonitorViewModel : ObservableObject
     private void OnTargetAdded(MonitorTarget target)
     {
         // Já vem na thread da UI (o serviço usa PostToUi).
+        target.PropertyChanged += OnTargetPropertyChanged;
         Targets.Add(target);
+        RecomputeSelected();
     }
 
     private void OnEventLogged(MonitorEvent ev)
