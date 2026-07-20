@@ -2,6 +2,12 @@
 
 Todas as mudanças notáveis do ScanProfinet.
 
+## [1.2.5] — 2026-07-20
+### Corrigido
+- PDF da topologia: sem páginas em branco e sem perda de qualidade (imagem embutida sem recompressão).
+### Adicionado
+- Fotos reais: SIMATIC PC, SCALANCE X-200, SICK CDF600, S7-400.
+
 ## [1.2.4] — 2026-07-20
 ### Adicionado
 - Topologia: **fotos reais dos devices** no diagrama (biblioteca embutida por VendorID/DeviceID: S7-1200/1500, SINAMICS G120, ET200SP/S, SIMATIC HMI, SCALANCE W700). Sem foto → ícone por tipo.
