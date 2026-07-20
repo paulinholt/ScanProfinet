@@ -2,6 +2,10 @@
 
 Todas as mudanças notáveis do ScanProfinet.
 
+## [1.2.6] — 2026-07-20
+### Corrigido
+- PDF da topologia: cada pagina renderizada direto do vetor em alta resolucao (nitido) e em largura cheia (bem menos paginas).
+
 ## [1.2.5] — 2026-07-20
 ### Corrigido
 - PDF da topologia: sem páginas em branco e sem perda de qualidade (imagem embutida sem recompressão).

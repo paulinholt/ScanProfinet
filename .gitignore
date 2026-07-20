@@ -14,3 +14,4 @@ installer/dependencies/*.exe
 .vs/
 *.suo
 Thumbs.db
+HANDOFF.md

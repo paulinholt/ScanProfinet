@@ -77,8 +77,8 @@ public partial class TopologyView : UserControl
         if (dlg.ShowDialog() != true) return;
         try
         {
-            var bmp = RenderSurface(DiagramSurface, 2.0);
-            PdfExportService.ExportDiagram(bmp, $"Topologia da rede — {DateTime.Now:dd/MM/yyyy HH:mm}", dlg.FileName);
+            var tiles = RenderDiagramTiles(DiagramSurface);
+            PdfExportService.ExportDiagramTiles(tiles, $"Topologia da rede — {DateTime.Now:dd/MM/yyyy HH:mm}", dlg.FileName);
             ExportHelper.OfferOpen(dlg.FileName);
         }
         catch (Exception ex)
@@ -127,5 +127,90 @@ public partial class TopologyView : UserControl
         surface.LayoutTransform = oldTransform;
         surface.UpdateLayout();
         return rtb;
+    }
+
+    /// <summary>
+    /// Fatia o diagrama em páginas (largura cheia, altura em proporção A4 paisagem) e
+    /// renderiza CADA página direto do vetor em alta resolução — nítido, sem re-escalar bitmap.
+    /// </summary>
+    private static List<byte[]> RenderDiagramTiles(FrameworkElement surface)
+    {
+        var oldTransform = surface.LayoutTransform;
+        surface.LayoutTransform = Transform.Identity;
+        surface.UpdateLayout();
+
+        var tiles = new List<byte[]>();
+        try
+        {
+            double W = surface.ActualWidth, H = surface.ActualHeight;
+            if (W < 1 || H < 1) throw new InvalidOperationException("Diagrama vazio.");
+
+            const double aspect = 297.0 / 210.0;   // A4 paisagem
+            const double px = 2.2;                  // densidade de render (nitidez)
+            const double overlap = 70;
+            double regionH = System.Math.Min(H, W / aspect);
+            double step = System.Math.Max(60, regionH - overlap);
+
+            for (double y = 0; y < H; y += step)
+            {
+                double rh = System.Math.Min(regionH, H - y);
+                var bmp = RenderRegion(surface, new Rect(0, y, W, rh), px);
+                if (TileHasContent(bmp)) tiles.Add(EncodePng(bmp));
+            }
+            if (tiles.Count == 0)
+                tiles.Add(EncodePng(RenderRegion(surface, new Rect(0, 0, W, H), px)));
+        }
+        finally
+        {
+            surface.LayoutTransform = oldTransform;
+            surface.UpdateLayout();
+        }
+        return tiles;
+    }
+
+    /// <summary>Renderiza uma região (em unidades do diagrama) direto do visual, com fundo branco.</summary>
+    private static RenderTargetBitmap RenderRegion(FrameworkElement surface, Rect region, double px)
+    {
+        var vb = new VisualBrush(surface)
+        {
+            Viewbox = region,
+            ViewboxUnits = BrushMappingMode.Absolute,
+            Stretch = Stretch.Fill
+        };
+        var dv = new DrawingVisual();
+        using (var dc = dv.RenderOpen())
+        {
+            dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, region.Width, region.Height));
+            dc.DrawRectangle(vb, null, new Rect(0, 0, region.Width, region.Height));
+        }
+        var rtb = new RenderTargetBitmap(
+            System.Math.Max(1, (int)(region.Width * px)), System.Math.Max(1, (int)(region.Height * px)),
+            96 * px, 96 * px, PixelFormats.Pbgra32);
+        rtb.Render(dv);
+        return rtb;
+    }
+
+    private static bool TileHasContent(BitmapSource bmp)
+    {
+        int w = bmp.PixelWidth, h = bmp.PixelHeight;
+        if (w < 1 || h < 1) return false;
+        int stride = w * 4;
+        var row = new byte[stride];
+        for (int y = 0; y < h; y += 6)
+        {
+            try { bmp.CopyPixels(new Int32Rect(0, y, w, 1), row, stride, 0); } catch { return true; }
+            for (int i = 0; i < stride; i += 16)
+                if (row[i] < 244 || row[i + 1] < 244 || row[i + 2] < 244) return true;
+        }
+        return false;
+    }
+
+    private static byte[] EncodePng(BitmapSource bmp)
+    {
+        var enc = new PngBitmapEncoder();
+        enc.Frames.Add(BitmapFrame.Create(bmp));
+        using var ms = new MemoryStream();
+        enc.Save(ms);
+        return ms.ToArray();
     }
 }
