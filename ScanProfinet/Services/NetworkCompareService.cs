@@ -9,12 +9,15 @@ namespace ScanProfinet.Services;
 /// </summary>
 public static class NetworkCompareService
 {
-    public static CompareSummary Compare(NetworkSnapshot reference, IEnumerable<ProfinetDevice> current)
+    public static CompareSummary Compare(NetworkSnapshot reference, IEnumerable<ProfinetDevice> current,
+                                         string comparisonName = "Rede atual", DateTime? comparisonDate = null)
     {
         var summary = new CompareSummary
         {
             ReferenceName = reference.Name,
-            ReferenceDate = reference.CreatedAt
+            ReferenceDate = reference.CreatedAt,
+            ComparisonName = comparisonName,
+            ComparisonDate = comparisonDate
         };
 
         var refByMac = reference.Devices

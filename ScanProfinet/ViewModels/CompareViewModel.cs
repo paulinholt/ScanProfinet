@@ -14,13 +14,16 @@ public partial class CompareViewModel : ObservableObject
     private readonly ScanViewModel _scan;
 
     [ObservableProperty] private NetworkSnapshot? _selectedReference;
+    [ObservableProperty] private CompareTarget? _selectedComparison;
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _statusText = "Selecione uma rede salva como referência e escaneie a rede atual.";
+    [ObservableProperty] private string _statusText = "Escolha a rede de referência e com o que comparar.";
     [ObservableProperty] private CompareSummary? _result;
     [ObservableProperty] private string _headline = "";
     [ObservableProperty] private bool _hasResult;
 
     public ObservableCollection<NetworkSnapshot> References { get; } = new();
+    /// <summary>Opções do "Comparar com": rede atual (scan) + redes salvas.</summary>
+    public ObservableCollection<CompareTarget> Comparisons { get; } = new();
     public ObservableCollection<CompareRow> Rows { get; } = new();
 
     public int CurrentDeviceCount => _scan.Devices.Count;
@@ -38,21 +41,34 @@ public partial class CompareViewModel : ObservableObject
 
     public void RefreshReferences()
     {
+        var prevRef = SelectedReference?.Id;
+        var prevComp = SelectedComparison?.Key;
+
         References.Clear();
-        foreach (var s in _repo.ListSnapshots())
+        Comparisons.Clear();
+        Comparisons.Add(new CompareTarget("SCAN", "Rede atual (último scan)", null));
+
+        var snaps = _repo.ListSnapshots();
+        foreach (var s in snaps)
+        {
             References.Add(s);
-        StatusText = References.Count == 0
-            ? "Nenhuma rede salva ainda. Vá em 'Scan' e salve uma rede primeiro."
-            : $"{References.Count} rede(s) salva(s) disponível(is) como referência.";
+            Comparisons.Add(new CompareTarget($"SNAP:{s.Id}", s.Display, s.Id));
+        }
+
+        SelectedReference = References.FirstOrDefault(r => r.Id == prevRef) ?? References.FirstOrDefault();
+        SelectedComparison = Comparisons.FirstOrDefault(c => c.Key == prevComp) ?? Comparisons.FirstOrDefault();
+
+        StatusText = snaps.Count == 0
+            ? "Nenhuma rede salva ainda. Vá em 'Scan da rede' e salve uma rede primeiro."
+            : $"{snaps.Count} rede(s) salva(s). Escolha a referência e com o que comparar.";
     }
 
     [RelayCommand]
     private async Task ScanNow()
     {
-        // Reaproveita o scan da aba principal para obter a rede atual.
         await _scan.ScanNetworkCommand.ExecuteAsync(null);
         OnPropertyChanged(nameof(CurrentDeviceCount));
-        StatusText = $"Rede atual: {_scan.Devices.Count} dispositivo(s). Clique em 'Comparar'.";
+        StatusText = $"Rede atual: {_scan.Devices.Count} dispositivo(s).";
     }
 
     [RelayCommand]
@@ -60,18 +76,19 @@ public partial class CompareViewModel : ObservableObject
     {
         if (SelectedReference == null)
         {
-            MessageBox.Show("Selecione a rede de referência (salva) para comparar.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Selecione a rede de referência (base) para comparar.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
-        if (_scan.Devices.Count == 0)
+        if (SelectedComparison == null)
         {
-            MessageBox.Show("Escaneie a rede atual antes de comparar (botão 'Escanear rede atual').", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Selecione com o que comparar (rede atual ou outra rede salva).", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         try
         {
             IsBusy = true;
+
             var reference = _repo.LoadSnapshot(SelectedReference.Id);
             if (reference == null)
             {
@@ -79,14 +96,50 @@ public partial class CompareViewModel : ObservableObject
                 return;
             }
 
-            var summary = NetworkCompareService.Compare(reference, _scan.Devices);
+            // Resolve o alvo da comparação: scan atual ou uma rede salva.
+            IReadOnlyList<ProfinetDevice> compDevices;
+            string compName;
+            DateTime? compDate;
+
+            if (SelectedComparison.SnapshotId is long compId)
+            {
+                if (compId == reference.Id)
+                {
+                    MessageBox.Show("A referência e a rede comparada são a mesma. Escolha redes diferentes.",
+                        "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                var compSnap = _repo.LoadSnapshot(compId);
+                if (compSnap == null)
+                {
+                    MessageBox.Show("Não foi possível carregar a rede comparada.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                compDevices = compSnap.Devices;
+                compName = compSnap.Name;
+                compDate = compSnap.CreatedAt;
+            }
+            else
+            {
+                if (_scan.Devices.Count == 0)
+                {
+                    MessageBox.Show("Escaneie a rede atual antes de comparar (botão 'Escanear rede atual'), ou escolha outra rede salva.",
+                        "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                compDevices = _scan.Devices.ToList();
+                compName = "Rede atual (scan)";
+                compDate = null;
+            }
+
+            var summary = NetworkCompareService.Compare(reference, compDevices, compName, compDate);
             Result = summary;
             Headline = summary.Headline;
             Rows.Clear();
             foreach (var row in summary.Rows) Rows.Add(row);
             HasResult = true;
-            StatusText = $"Comparação com '{reference.Name}' concluída.";
-            AppLog.Info($"Compare '{reference.Name}': -{summary.Removed} +{summary.Added} ~{summary.Changed}");
+            StatusText = $"Comparação concluída: {reference.Name} → {compName}.";
+            AppLog.Info($"Compare '{reference.Name}' → '{compName}': -{summary.Removed} +{summary.Added} ~{summary.Changed}");
         }
         catch (Exception ex)
         {
@@ -111,4 +164,6 @@ public partial class CompareViewModel : ObservableObject
         Rows.Clear();
         HasResult = false;
     }
+
+    public sealed record CompareTarget(string Key, string Display, long? SnapshotId);
 }

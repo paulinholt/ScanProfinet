@@ -53,6 +53,8 @@ public class CompareSummary
 {
     public string ReferenceName { get; set; } = "";
     public DateTime ReferenceDate { get; set; }
+    public string ComparisonName { get; set; } = "";
+    public DateTime? ComparisonDate { get; set; }
     public int Removed { get; set; }
     public int Added { get; set; }
     public int Changed { get; set; }
@@ -63,5 +65,18 @@ public class CompareSummary
 
     public string Headline => HasDivergences
         ? $"Divergências encontradas: {Removed} saíram, {Added} entraram, {Changed} alterados."
-        : "Rede idêntica à referência salva. Nenhuma divergência.";
+        : "Redes idênticas. Nenhuma divergência.";
+
+    /// <summary>Ex.: "RedeCliente1 (18/07 14:00)  →  Hoje (20/07 09:30)".</summary>
+    public string ComparisonHeader
+    {
+        get
+        {
+            var refPart = $"{ReferenceName} ({ReferenceDate:dd/MM HH:mm})";
+            var compPart = ComparisonDate.HasValue
+                ? $"{ComparisonName} ({ComparisonDate.Value:dd/MM HH:mm})"
+                : ComparisonName;
+            return $"{refPart}   →   {compPart}";
+        }
+    }
 }
