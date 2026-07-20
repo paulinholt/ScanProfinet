@@ -2,6 +2,11 @@
 
 Todas as mudanças notáveis do ScanProfinet.
 
+## [1.2.1] — 2026-07-20
+### Adicionado
+- Topologia: **exportar o diagrama como PNG** (desenho completo em alta resolução,
+  fundo branco, independente do zoom da tela).
+
 ## [1.2.0] — 2026-07-20
 ### Adicionado
 - **Exportar Excel (.xlsx)** nas telas Scan, Comparar e Topologia (colunas por
