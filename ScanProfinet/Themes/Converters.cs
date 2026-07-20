@@ -107,6 +107,29 @@ public class LatencyToHeightConverter : IValueConverter
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
 }
 
+/// <summary>Nome do arquivo → ImageSource da foto embutida (ou null).</summary>
+public class ResourceToImageConverter : IValueConverter
+{
+    public object? Convert(object value, Type t, object p, CultureInfo c)
+    {
+        if (value is string s && !string.IsNullOrEmpty(s))
+        {
+            try { return new System.Windows.Media.Imaging.BitmapImage(new Uri($"pack://application:,,,/Resources/devices/{s}")); }
+            catch { return null; }
+        }
+        return null;
+    }
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
+}
+
+/// <summary>null/vazio → Visible (usado para mostrar o ícone quando NÃO há foto).</summary>
+public class NullToVisibleConverter : IValueConverter
+{
+    public object Convert(object value, Type t, object p, CultureInfo c)
+        => (value == null || (value is string s && s.Length == 0)) ? Visibility.Visible : Visibility.Collapsed;
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
+}
+
 /// <summary>Ícone (Geometry) por tipo de dispositivo, aproximando os ícones do PRONETA.</summary>
 public class NodeKindToGeometryConverter : IValueConverter
 {

@@ -2,6 +2,10 @@
 
 Todas as mudanças notáveis do ScanProfinet.
 
+## [1.2.4] — 2026-07-20
+### Adicionado
+- Topologia: **fotos reais dos devices** no diagrama (biblioteca embutida por VendorID/DeviceID: S7-1200/1500, SINAMICS G120, ET200SP/S, SIMATIC HMI, SCALANCE W700). Sem foto → ícone por tipo.
+
 ## [1.2.3] — 2026-07-20
 ### Adicionado
 - Export do Scan inclui VendorID e DeviceID (identidade do modelo, base para imagens reais de device).

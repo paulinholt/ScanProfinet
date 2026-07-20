@@ -12,6 +12,8 @@ public class TopologyLink
     public string NeighborDevice { get; set; } = "";
     public string NeighborPort { get; set; } = "";
     public string LocalRole { get; set; } = "";
+    public ushort LocalVendorId { get; set; }
+    public ushort LocalDeviceId { get; set; }
 
     /// <summary>Chave para deduplicar ligações recíprocas (A↔B).</summary>
     public string PairKey

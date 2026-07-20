@@ -15,6 +15,8 @@
     <conv:HexToBrushConverter x:Key="HexBrush"/>
     <conv:NodeKindToGeometryConverter x:Key="KindGeom"/>
     <conv:NodeKindToBrushConverter x:Key="KindBrush"/>
+    <conv:ResourceToImageConverter x:Key="ResImg"/>
+    <conv:NullToVisibleConverter x:Key="NullVis"/>
 
     <!-- ============ Paleta ============ -->
     <Color x:Key="NavyColor">#0F1B2D</Color>

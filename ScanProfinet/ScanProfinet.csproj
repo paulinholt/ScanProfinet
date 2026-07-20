@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Resource Include="Resources\scanprofinet.ico" />
+    <Resource Include="Resources\devices\*.png" />
   </ItemGroup>
 
   <!-- Evita ambiguidade entre System.Windows.* (WPF) e System.Windows.Forms.* -->

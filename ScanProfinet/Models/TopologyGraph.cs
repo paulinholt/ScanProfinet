@@ -10,6 +10,7 @@ public partial class TopoNode : ObservableObject
     public string Name { get; init; } = "";
     public bool IsHub { get; set; }          // muitos vínculos (switch/CLP) → destaque
     public NodeKind Kind { get; set; }
+    public string? ImageResource { get; set; }   // foto real do modelo, se houver
     public double Width { get; init; } = 168;
     public double Height { get; init; } = 54;
 
@@ -77,6 +78,7 @@ public static class TopologyLayout
         var adj = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         var edgePairs = new Dictionary<string, TopoEdge>();
         var roleMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var imgMap = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
         TopoNode Node(string name)
         {
@@ -95,6 +97,8 @@ public static class TopologyLayout
             if (string.Equals(l.LocalDevice, l.NeighborDevice, StringComparison.OrdinalIgnoreCase)) continue;
 
             if (!string.IsNullOrWhiteSpace(l.LocalRole)) roleMap[l.LocalDevice] = l.LocalRole;
+            if (l.LocalVendorId != 0 || l.LocalDeviceId != 0)
+                imgMap[l.LocalDevice] = DeviceImageCatalog.ResourceFor(l.LocalVendorId, l.LocalDeviceId);
 
             var a = Node(l.LocalDevice);
             var b = Node(l.NeighborDevice);
@@ -112,6 +116,7 @@ public static class TopologyLayout
         {
             n.IsHub = adj[n.Name].Count >= 3;
             var role = roleMap.TryGetValue(n.Name, out var rl) ? rl : "";
+            n.ImageResource = imgMap.TryGetValue(n.Name, out var img) ? img : null;
             n.Kind = role.Contains("Controller", StringComparison.OrdinalIgnoreCase) ? NodeKind.Controller
                    : n.IsHub ? NodeKind.Switch
                    : !string.IsNullOrWhiteSpace(role) ? NodeKind.IODevice

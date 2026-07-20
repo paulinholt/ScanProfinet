@@ -125,6 +125,8 @@ public static class LldpTopologyService
                     LocalIp = dev.IpAddress,
                     LocalMac = dev.MacAddress,
                     LocalRole = dev.DeviceRole,
+                    LocalVendorId = dev.VendorId,
+                    LocalDeviceId = dev.DeviceId,
                     LocalPort = locPorts.TryGetValue(kv.Key.port, out var p) && !string.IsNullOrWhiteSpace(p) ? p : $"porta {kv.Key.port}",
                     NeighborDevice = neighbor,
                     NeighborPort = neighborPort

@@ -234,10 +234,15 @@
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <Path x:Name="ic" Grid.Column="0" Width="26" Height="26" Stretch="Uniform" Margin="0,0,9,0"
-                                                              VerticalAlignment="Center" StrokeThickness="1.4"
-                                                              Data="{Binding Kind, Converter={StaticResource KindGeom}}"
-                                                              Stroke="{Binding Kind, Converter={StaticResource KindBrush}}"/>
+                                                        <Grid Grid.Column="0" Width="34" Height="38" Margin="0,0,9,0" VerticalAlignment="Center">
+                                                            <Image Source="{Binding ImageResource, Converter={StaticResource ResImg}}"
+                                                                   Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                                            <Path x:Name="ic" Width="26" Height="26" Stretch="Uniform" StrokeThickness="1.4"
+                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                  Visibility="{Binding ImageResource, Converter={StaticResource NullVis}}"
+                                                                  Data="{Binding Kind, Converter={StaticResource KindGeom}}"
+                                                                  Stroke="{Binding Kind, Converter={StaticResource KindBrush}}"/>
+                                                        </Grid>
                                                         <TextBlock x:Name="nt" Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"
                                                                    Foreground="#1E293B" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                                                     </Grid>
