@@ -21,6 +21,8 @@ public static class DeviceImageCatalog
         { "002A_0A01", "scalance-x200.png" },// SCALANCE X-200 (switch)
         { "002A_0202", "simatic-pc.png" },   // SIMATIC PC
         { "0101_5110", "sick-cdf600.png" },  // SICK CDF600
+        { "002A_0102", "s7-400.png" },       // S7-400
+        { "002A_0201", "s7-400.png" },       // S7-400 CP
     };
 
     /// <summary>Retorna o nome do arquivo de imagem ou null se não houver.</summary>
