@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/vers%C3%A3o-1.1.2-2563EB">
+  <img src="https://img.shields.io/badge/vers%C3%A3o-1.2.0-2563EB">
   <img src="https://img.shields.io/badge/plataforma-Windows%2010%20%7C%2011%20%7C%20Server%202012%2B-0F1B2D">
   <img src="https://img.shields.io/badge/.NET-8.0%20(WPF)-512BD4">
   <img src="https://img.shields.io/badge/licen%C3%A7a-MIT-16A34A">
@@ -64,7 +64,14 @@ de **inteligência**: salvar a foto da rede, comparar com uma nova varredura e m
 - Registra tudo em **log e banco**: quedas, retornos, oscilações (*flapping*) e adições.
 - Limite configurável de dispositivos monitorados (padrão **50**).
 
+### 🔗 Topologia (LLDP)
+- **Mapa de vizinhança** porta a porta, lido via **SNMP** (LLDP-MIB) de cada dispositivo.
+- **Desenho gráfico** da rede (nós + cabos) com layout automático, zoom e nós arrastáveis.
+- **Salvar e comparar** topologias → detecta **cabo trocado**, ligação que sumiu ou nova.
+- Comunidade SNMP configurável.
+
 ### 🖥️ Outros
+- **Exportar para Excel (.xlsx)** — scan, comparação e topologia, com colunas prontas para filtrar.
 - **Ícone na bandeja**: minimizar/fechar mantém o monitoramento rodando em segundo plano.
 - **Painel lateral de redes salvas**: duplo clique consulta o que foi mapeado e a data.
 - **Logs dedicados** de reendereçamentos (Set IP/Nome) e de eventos de monitoramento.
