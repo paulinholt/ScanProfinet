@@ -9,6 +9,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
         // Log global de exceções não tratadas — evita "crash silencioso" em campo.
         DispatcherUnhandledException += OnDispatcherUnhandledException;

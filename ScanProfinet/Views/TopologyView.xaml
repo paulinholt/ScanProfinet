@@ -95,6 +95,8 @@
                     <Button Content="+" Command="{Binding ZoomInCommand}" Style="{StaticResource BtnGhost}" Width="34" Padding="0,4"/>
                     <Button Content="Exportar PNG" Style="{StaticResource BtnGhost}" Click="ExportPng_Click"
                             Padding="12,4" Margin="12,0,0,0" ToolTip="Salva o desenho completo da topologia como imagem"/>
+                    <Button Content="Exportar PDF" Style="{StaticResource BtnGhost}" Click="ExportPdf_Click"
+                            Padding="12,4" Margin="8,0,0,0" ToolTip="Exporta o diagrama paginado em PDF (ideal para redes grandes)"/>
                 </StackPanel>
 
                 <Button Content="Salvar topologia" Style="{StaticResource BtnSuccess}"
@@ -224,18 +226,28 @@
                                     <Thumb DragDelta="NodeThumb_DragDelta" Cursor="SizeAll">
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border x:Name="nb" Width="160" Height="50" CornerRadius="8"
+                                                <Border x:Name="nb" Width="168" Height="54" CornerRadius="8"
                                                         Background="White" BorderBrush="{StaticResource Accent}" BorderThickness="1.5">
                                                     <Border.Effect><DropShadowEffect Color="#334155" BlurRadius="8" ShadowDepth="1" Opacity="0.18"/></Border.Effect>
-                                                    <TextBlock x:Name="nt" Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"
-                                                               Foreground="#1E293B" TextTrimming="CharacterEllipsis"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center" Margin="8,0"/>
+                                                    <Grid Margin="10,0,10,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Path x:Name="ic" Grid.Column="0" Width="26" Height="26" Stretch="Uniform" Margin="0,0,9,0"
+                                                              VerticalAlignment="Center" StrokeThickness="1.4"
+                                                              Data="{Binding Kind, Converter={StaticResource KindGeom}}"
+                                                              Stroke="{Binding Kind, Converter={StaticResource KindBrush}}"/>
+                                                        <TextBlock x:Name="nt" Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"
+                                                                   Foreground="#1E293B" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                    </Grid>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <DataTrigger Binding="{Binding IsHub}" Value="True">
                                                         <Setter TargetName="nb" Property="Background" Value="{StaticResource Navy}"/>
                                                         <Setter TargetName="nb" Property="BorderBrush" Value="{StaticResource Navy}"/>
                                                         <Setter TargetName="nt" Property="Foreground" Value="White"/>
+                                                        <Setter TargetName="ic" Property="Stroke" Value="White"/>
                                                     </DataTrigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>

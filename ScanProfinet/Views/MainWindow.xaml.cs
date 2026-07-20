@@ -89,4 +89,14 @@ public partial class MainWindow : Window
             vm.OpenSnapshotDetails(vm.SelectedSaved);
         }
     }
+
+    private void SavedTopoList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject src &&
+            ItemsControl.ContainerFromElement(SavedTopoList, src) is ListBoxItem &&
+            DataContext is MainViewModel vm)
+        {
+            vm.OpenTopology(vm.SelectedSavedTopology);
+        }
+    }
 }

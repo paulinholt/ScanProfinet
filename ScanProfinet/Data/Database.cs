@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS TopologyLinks (
     LocalPort      TEXT,
     NeighborDevice TEXT,
     NeighborPort   TEXT,
+    LocalRole      TEXT,
     FOREIGN KEY (SnapshotId) REFERENCES TopologySnapshots(Id) ON DELETE CASCADE
 );
 
@@ -82,6 +83,21 @@ CREATE INDEX IF NOT EXISTS IX_MonitorEvents_Time ON MonitorEvents(Timestamp);
 CREATE INDEX IF NOT EXISTS IX_TopologyLinks_Snapshot ON TopologyLinks(SnapshotId);
 ";
         cmd.ExecuteNonQuery();
+
+        // Migração leve para bancos antigos (coluna adicionada na 1.3).
+        TryAddColumn(conn, "TopologyLinks", "LocalRole", "TEXT");
+
         AppLog.Info($"Banco inicializado em {AppPaths.DatabaseFile}");
+    }
+
+    private static void TryAddColumn(SqliteConnection conn, string table, string column, string type)
+    {
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {type};";
+            cmd.ExecuteNonQuery();
+        }
+        catch { /* já existe */ }
     }
 }

@@ -45,7 +45,10 @@ public partial class TopologyView : UserControl
 
         try
         {
-            RenderSurfaceToPng(DiagramSurface, dlg.FileName);
+            var bmp = RenderSurface(DiagramSurface, 1.5);
+            var enc = new PngBitmapEncoder();
+            enc.Frames.Add(BitmapFrame.Create(bmp));
+            using (var fs = File.Create(dlg.FileName)) enc.Save(fs);
             ExportHelper.OfferOpen(dlg.FileName);
         }
         catch (Exception ex)
@@ -56,13 +59,42 @@ public partial class TopologyView : UserControl
         }
     }
 
-    /// <summary>
-    /// Renderiza o diagrama inteiro (não só a parte visível) em PNG, ignorando o zoom
-    /// da tela e usando fundo branco.
-    /// </summary>
-    private static void RenderSurfaceToPng(FrameworkElement surface, string path)
+    private void ExportPdf_Click(object sender, RoutedEventArgs e)
     {
-        // Remove o zoom temporariamente para render 1:1 do tamanho real do canvas.
+        if (DataContext is not TopologyViewModel vm || vm.Nodes.Count == 0)
+        {
+            MessageBox.Show("Mapeie a topologia antes de exportar o diagrama.", "ScanProfinet",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        var dlg = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "Documento PDF (*.pdf)|*.pdf",
+            FileName = $"ScanProfinet_topologia_{DateTime.Now:yyyy-MM-dd_HHmm}.pdf",
+            AddExtension = true,
+            DefaultExt = ".pdf"
+        };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            var bmp = RenderSurface(DiagramSurface, 2.0);
+            PdfExportService.ExportDiagram(bmp, $"Topologia da rede — {DateTime.Now:dd/MM/yyyy HH:mm}", dlg.FileName);
+            ExportHelper.OfferOpen(dlg.FileName);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error("Falha ao exportar diagrama PDF", ex);
+            MessageBox.Show($"Erro ao exportar PDF:\n{ex.Message}", "ScanProfinet",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>
+    /// Renderiza o diagrama inteiro (não só a parte visível) em bitmap, ignorando o zoom
+    /// da tela e usando fundo branco. Retorna o bitmap para salvar como PNG ou paginar em PDF.
+    /// </summary>
+    private static RenderTargetBitmap RenderSurface(FrameworkElement surface, double preferredScale)
+    {
         var oldTransform = surface.LayoutTransform;
         surface.LayoutTransform = Transform.Identity;
         surface.UpdateLayout();
@@ -75,8 +107,8 @@ public partial class TopologyView : UserControl
             throw new InvalidOperationException("Diagrama vazio.");
         }
 
-        // Fator de nitidez (limitado para não estourar memória em redes muito grandes).
-        double scale = (w * 1.5) * (h * 1.5) > 40_000_000 ? 1.0 : 1.5;
+        // Limita para não estourar memória em redes muito grandes.
+        double scale = (w * preferredScale) * (h * preferredScale) > 60_000_000 ? 1.0 : preferredScale;
 
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())
@@ -91,13 +123,8 @@ public partial class TopologyView : UserControl
             96 * scale, 96 * scale, PixelFormats.Pbgra32);
         rtb.Render(visual);
 
-        // Restaura o zoom.
         surface.LayoutTransform = oldTransform;
         surface.UpdateLayout();
-
-        var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(rtb));
-        using var fs = File.Create(path);
-        encoder.Save(fs);
+        return rtb;
     }
 }

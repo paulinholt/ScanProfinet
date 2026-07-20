@@ -219,8 +219,8 @@ public class SnapshotRepository
             using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
             cmd.CommandText = @"INSERT INTO TopologyLinks
-                (SnapshotId, LocalDevice, LocalIp, LocalMac, LocalPort, NeighborDevice, NeighborPort)
-                VALUES ($s,$ld,$lip,$lmac,$lp,$nd,$np);";
+                (SnapshotId, LocalDevice, LocalIp, LocalMac, LocalPort, NeighborDevice, NeighborPort, LocalRole)
+                VALUES ($s,$ld,$lip,$lmac,$lp,$nd,$np,$lr);";
             cmd.Parameters.AddWithValue("$s", id);
             cmd.Parameters.AddWithValue("$ld", l.LocalDevice);
             cmd.Parameters.AddWithValue("$lip", l.LocalIp);
@@ -228,6 +228,7 @@ public class SnapshotRepository
             cmd.Parameters.AddWithValue("$lp", l.LocalPort);
             cmd.Parameters.AddWithValue("$nd", l.NeighborDevice);
             cmd.Parameters.AddWithValue("$np", l.NeighborPort);
+            cmd.Parameters.AddWithValue("$lr", l.LocalRole ?? "");
             cmd.ExecuteNonQuery();
         }
         tx.Commit();
@@ -261,7 +262,7 @@ public class SnapshotRepository
         var links = new List<TopologyLink>();
         using var conn = Database.Open();
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"SELECT LocalDevice, LocalIp, LocalMac, LocalPort, NeighborDevice, NeighborPort
+        cmd.CommandText = @"SELECT LocalDevice, LocalIp, LocalMac, LocalPort, NeighborDevice, NeighborPort, LocalRole
                             FROM TopologyLinks WHERE SnapshotId = $id;";
         cmd.Parameters.AddWithValue("$id", id);
         using var r = cmd.ExecuteReader();
@@ -274,6 +275,7 @@ public class SnapshotRepository
                 LocalPort = r.IsDBNull(3) ? "" : r.GetString(3),
                 NeighborDevice = r.IsDBNull(4) ? "" : r.GetString(4),
                 NeighborPort = r.IsDBNull(5) ? "" : r.GetString(5),
+                LocalRole = r.IsDBNull(6) ? "" : r.GetString(6),
             });
         return links;
     }

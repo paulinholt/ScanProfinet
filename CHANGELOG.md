@@ -2,6 +2,15 @@
 
 Todas as mudanças notáveis do ScanProfinet.
 
+## [1.2.2] — 2026-07-20
+### Adicionado
+- Topologia: **ícones por tipo de dispositivo** (CLP/switch/IO) no diagrama.
+- Topologia: **exportar o diagrama em PDF paginado** (ideal para redes grandes).
+- Painel direito: seção **"Topologias salvas"** — duplo clique reabre o diagrama.
+### Melhorado
+- Layout do diagrama quebra níveis muito largos em várias linhas (redes grandes).
+- Topologia salva agora guarda o papel do device (para os ícones ao reabrir).
+
 ## [1.2.1] — 2026-07-20
 ### Adicionado
 - Topologia: **exportar o diagrama como PNG** (desenho completo em alta resolução,

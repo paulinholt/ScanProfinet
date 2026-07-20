@@ -107,6 +107,40 @@ public class LatencyToHeightConverter : IValueConverter
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
 }
 
+/// <summary>Ícone (Geometry) por tipo de dispositivo, aproximando os ícones do PRONETA.</summary>
+public class NodeKindToGeometryConverter : IValueConverter
+{
+    public object Convert(object value, Type t, object p, CultureInfo c)
+    {
+        string data = value is NodeKind k ? k switch
+        {
+            NodeKind.Controller => "M4,5 H18 V17 H4 Z M7,5 V2 M11,5 V2 M15,5 V2 M7,17 V20 M11,17 V20 M15,17 V20 M2,8 H4 M2,11 H4 M2,14 H4 M18,8 H20 M18,11 H20 M18,14 H20 M9,9 H13 V13 H9 Z",
+            NodeKind.Switch => "M2,7 H20 V15 H2 Z M5,9 H7 V13 H5 Z M9,9 H11 V13 H9 Z M13,9 H15 V13 H13 Z M17,9 H19 V13 H17 Z",
+            NodeKind.IODevice => "M5,2 H17 V20 H5 Z M8,6 H14 M8,9 H14 M8,12 H14 M8,15 H14",
+            _ => "M4,4 H18 V18 H4 Z M8,8 H14 V14 H8 Z"
+        } : "M4,4 H18 V18 H4 Z";
+        return Geometry.Parse(data);
+    }
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
+}
+
+/// <summary>Cor do ícone por tipo de dispositivo.</summary>
+public class NodeKindToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type t, object p, CultureInfo c)
+    {
+        var hex = value is NodeKind k ? k switch
+        {
+            NodeKind.Controller => "#2563EB",
+            NodeKind.Switch => "#7C3AED",
+            NodeKind.IODevice => "#0891B2",
+            _ => "#94A3B8"
+        } : "#94A3B8";
+        return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+    }
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
+}
+
 /// <summary>Converte uma string hexadecimal (#RRGGBB) em SolidColorBrush.</summary>
 public class HexToBrushConverter : IValueConverter
 {

@@ -42,6 +42,32 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Card das listas do painel direito -->
+        <Style x:Key="SavedCardItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="b" CornerRadius="8" Padding="12,10" Background="#F8FAFC"
+                                BorderBrush="{StaticResource Border}" BorderThickness="1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#EFF6FF"/>
+                                <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#DBEAFE"/>
+                                <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -148,82 +174,86 @@
             </ItemsControl>
         </Grid>
 
-        <!-- ===== Painel direito: redes salvas ===== -->
+        <!-- ===== Painel direito: redes + topologias salvas ===== -->
         <Border Grid.Column="2" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}"
                 BorderThickness="1,0,0,0" TextElement.Foreground="{StaticResource Text}">
-            <DockPanel>
-                <Border DockPanel.Dock="Top" Padding="16,16,16,10">
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="⟳" Style="{StaticResource BtnGhost}"
-                                Command="{Binding RefreshSavedCommand}" Padding="8,2" FontSize="14"
-                                ToolTip="Atualizar lista"/>
-                        <StackPanel>
-                            <TextBlock Text="Redes salvas" FontSize="15" FontWeight="Bold"/>
-                            <TextBlock Text="Duplo clique para consultar" Style="{StaticResource Subtle}"/>
-                        </StackPanel>
-                    </DockPanel>
-                </Border>
-                <Border DockPanel.Dock="Top" Height="1" Background="{StaticResource Border}" Margin="16,0,16,0"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                <!-- Estado vazio -->
-                <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Top" Margin="18,20,18,0"
-                            Visibility="{Binding HasSavedNetworks, Converter={StaticResource InverseBoolToVis}}">
-                    <TextBlock Text="Nenhuma rede salva ainda." Foreground="{StaticResource TextMuted}"
-                               FontSize="12.5" TextWrapping="Wrap"/>
-                    <TextBlock Text="Escaneie a rede na aba 'Scan da rede' e clique em 'Salvar rede'."
-                               Foreground="{StaticResource TextMuted}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                </StackPanel>
-
-                <ListBox x:Name="SavedList" BorderThickness="0" Background="Transparent" Margin="8,6,8,8"
-                         ItemsSource="{Binding SavedNetworks}" SelectedItem="{Binding SelectedSaved}"
-                         MouseDoubleClick="SavedList_MouseDoubleClick"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         HorizontalContentAlignment="Stretch">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="0"/>
-                            <Setter Property="Margin" Value="0,2"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="b" CornerRadius="8" Padding="12,10" Background="#F8FAFC"
-                                                BorderBrush="{StaticResource Border}" BorderThickness="1">
-                                            <ContentPresenter/>
+                <!-- Seção 1: Redes salvas -->
+                <DockPanel Grid.Row="0">
+                    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,8">
+                        <TextBlock Text="Redes salvas" FontSize="15" FontWeight="Bold"/>
+                        <TextBlock Text="Duplo clique para consultar" Style="{StaticResource Subtle}"/>
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="16,4,16,0" Foreground="{StaticResource TextMuted}"
+                               FontSize="12" TextWrapping="Wrap" Text="Nenhuma rede salva ainda."
+                               Visibility="{Binding HasSavedNetworks, Converter={StaticResource InverseBoolToVis}}"/>
+                    <ListBox x:Name="SavedList" BorderThickness="0" Background="Transparent" Margin="8,4,8,8"
+                             ItemsSource="{Binding SavedNetworks}" SelectedItem="{Binding SelectedSaved}"
+                             MouseDoubleClick="SavedList_MouseDoubleClick"
+                             ItemContainerStyle="{StaticResource SavedCardItem}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5"
+                                               TextTrimming="CharacterEllipsis" Foreground="{StaticResource Text}"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <Border Background="#E0EAFF" CornerRadius="8" Padding="7,1">
+                                            <TextBlock Text="{Binding DeviceCount, StringFormat={}{0} disp.}"
+                                                       FontSize="11" Foreground="#2563EB" FontWeight="SemiBold"/>
                                         </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="#EFF6FF"/>
-                                                <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="#DBEAFE"/>
-                                                <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5"
-                                           TextTrimming="CharacterEllipsis" Foreground="{StaticResource Text}"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                    <Border Background="#E0EAFF" CornerRadius="8" Padding="7,1">
-                                        <TextBlock Text="{Binding DeviceCount, StringFormat={}{0} disp.}"
-                                                   FontSize="11" Foreground="#2563EB" FontWeight="SemiBold"/>
-                                    </Border>
-                                    <TextBlock Text="{Binding CreatedAt, StringFormat=dd/MM/yyyy HH:mm}"
-                                               FontSize="11.5" Foreground="{StaticResource TextMuted}"
-                                               VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat=dd/MM/yyyy HH:mm}"
+                                                   FontSize="11.5" Foreground="{StaticResource TextMuted}"
+                                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+
+                <Border Grid.Row="1" Height="1" Background="{StaticResource Border}" Margin="16,0"/>
+
+                <!-- Seção 2: Topologias salvas -->
+                <DockPanel Grid.Row="2">
+                    <StackPanel DockPanel.Dock="Top" Margin="16,14,16,8">
+                        <TextBlock Text="Topologias salvas" FontSize="15" FontWeight="Bold"/>
+                        <TextBlock Text="Duplo clique para abrir o diagrama" Style="{StaticResource Subtle}"/>
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="16,4,16,0" Foreground="{StaticResource TextMuted}"
+                               FontSize="12" TextWrapping="Wrap" Text="Nenhuma topologia salva ainda."
+                               Visibility="{Binding HasSavedTopologies, Converter={StaticResource InverseBoolToVis}}"/>
+                    <ListBox x:Name="SavedTopoList" BorderThickness="0" Background="Transparent" Margin="8,4,8,8"
+                             ItemsSource="{Binding SavedTopologies}" SelectedItem="{Binding SelectedSavedTopology}"
+                             MouseDoubleClick="SavedTopoList_MouseDoubleClick"
+                             ItemContainerStyle="{StaticResource SavedCardItem}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5"
+                                               TextTrimming="CharacterEllipsis" Foreground="{StaticResource Text}"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <Border Background="#EDE9FE" CornerRadius="8" Padding="7,1">
+                                            <TextBlock Text="{Binding LinkCount, StringFormat={}{0} lig.}"
+                                                       FontSize="11" Foreground="#7C3AED" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat=dd/MM/yyyy HH:mm}"
+                                                   FontSize="11.5" Foreground="{StaticResource TextMuted}"
+                                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>

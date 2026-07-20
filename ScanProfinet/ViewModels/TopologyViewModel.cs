@@ -53,6 +53,9 @@ public partial class TopologyViewModel : ObservableObject
     public ObservableCollection<NetworkInterfaceInfo> Interfaces => _scan.Interfaces;
     public bool IsNpcapAvailable => _scan.IsNpcapAvailable;
 
+    /// <summary>Disparado quando uma topologia é salva ou excluída (atualiza o painel direito).</summary>
+    public event Action? TopologiesChanged;
+
     public bool IsTable => View == TopoView.Tabela;
     public bool IsDiagram => View == TopoView.Diagrama;
     public bool IsCompareView => View == TopoView.Comparacao;
@@ -82,6 +85,28 @@ public partial class TopologyViewModel : ObservableObject
         SavedTopologies.Clear();
         foreach (var t in _repo.ListTopologies()) SavedTopologies.Add(t);
         SelectedComparison = SavedTopologies.FirstOrDefault(t => t.Id == prev) ?? SavedTopologies.FirstOrDefault();
+    }
+
+    /// <summary>Carrega uma topologia salva de volta na tela (tabela + diagrama).</summary>
+    public void LoadSaved(long id, string name)
+    {
+        _allLinks.Clear();
+        _allLinks.AddRange(_repo.LoadTopologyLinks(id));
+        HasMapped = true;
+        HasCompareResult = false;
+        CompareRows.Clear();
+        OnPropertyChanged(nameof(HasLinks));
+        ApplyFilter();
+        BuildGraph();
+
+        var devices = _allLinks.Select(l => l.LocalDevice)
+            .Concat(_allLinks.Select(l => l.NeighborDevice))
+            .Where(d => !string.IsNullOrWhiteSpace(d))
+            .Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        DevicesScanned = devices;
+        DevicesAnswered = devices;
+        View = TopoView.Diagrama;
+        StatusText = $"Topologia salva '{name}' carregada ({LinkCount} ligações).";
     }
 
     private IEnumerable<TopologyLink> Deduped()
@@ -175,6 +200,7 @@ public partial class TopologyViewModel : ObservableObject
         {
             _repo.SaveTopology(dlg.SnapshotName.Trim(), dlg.Notes, Deduped());
             RefreshTopologies();
+            TopologiesChanged?.Invoke();
             StatusText = $"Topologia salva como '{dlg.SnapshotName.Trim()}'.";
             MessageBox.Show($"Topologia '{dlg.SnapshotName.Trim()}' salva com sucesso.", "ScanProfinet", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -226,6 +252,7 @@ public partial class TopologyViewModel : ObservableObject
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
         _repo.DeleteTopology(SelectedComparison.Id);
         RefreshTopologies();
+        TopologiesChanged?.Invoke();
     }
 
     [RelayCommand]

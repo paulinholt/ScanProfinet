@@ -17,6 +17,7 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty] private AppSection _section = AppSection.Scan;
     [ObservableProperty] private NetworkSnapshot? _selectedSaved;
+    [ObservableProperty] private TopologySnapshotInfo? _selectedSavedTopology;
 
     public ScanViewModel Scan { get; }
     public CompareViewModel Compare { get; }
@@ -26,9 +27,12 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Redes salvas exibidas no painel lateral direito.</summary>
     public ObservableCollection<NetworkSnapshot> SavedNetworks { get; } = new();
+    /// <summary>Topologias salvas exibidas no painel lateral direito.</summary>
+    public ObservableCollection<TopologySnapshotInfo> SavedTopologies { get; } = new();
 
     public string VersionText { get; }
     public bool HasSavedNetworks => SavedNetworks.Count > 0;
+    public bool HasSavedTopologies => SavedTopologies.Count > 0;
 
     public MainViewModel()
     {
@@ -41,14 +45,16 @@ public partial class MainViewModel : ObservableObject
         Monitor = new MonitorViewModel(_repo, Scan, Notifications);
         Topology = new TopologyViewModel(Scan, _repo);
 
-        // Quando uma rede é salva ou excluída, atualiza o painel direito.
+        // Quando uma rede/topologia é salva ou excluída, atualiza o painel direito.
         Scan.SnapshotsChanged += RefreshSavedNetworks;
         Compare.SnapshotsChanged += RefreshSavedNetworks;
+        Topology.TopologiesChanged += RefreshSavedTopologies;
 
         var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         VersionText = $"v{v?.Major}.{v?.Minor}.{v?.Build}";
 
         RefreshSavedNetworks();
+        RefreshSavedTopologies();
     }
 
     public void RefreshSavedNetworks()
@@ -57,6 +63,22 @@ public partial class MainViewModel : ObservableObject
         foreach (var s in _repo.ListSnapshots())
             SavedNetworks.Add(s);
         OnPropertyChanged(nameof(HasSavedNetworks));
+    }
+
+    public void RefreshSavedTopologies()
+    {
+        SavedTopologies.Clear();
+        foreach (var t in _repo.ListTopologies())
+            SavedTopologies.Add(t);
+        OnPropertyChanged(nameof(HasSavedTopologies));
+    }
+
+    /// <summary>Abre uma topologia salva na aba Topologia.</summary>
+    public void OpenTopology(TopologySnapshotInfo? info)
+    {
+        if (info == null) return;
+        Section = AppSection.Topology;
+        Topology.LoadSaved(info.Id, info.Name);
     }
 
     /// <summary>Abre o detalhe de uma rede salva (dispositivos mapeados + data).</summary>

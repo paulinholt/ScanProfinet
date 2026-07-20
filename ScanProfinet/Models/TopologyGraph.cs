@@ -2,13 +2,16 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ScanProfinet.Models;
 
+public enum NodeKind { Unknown, Controller, Switch, IODevice }
+
 /// <summary>Nó (dispositivo) do desenho de topologia.</summary>
 public partial class TopoNode : ObservableObject
 {
     public string Name { get; init; } = "";
     public bool IsHub { get; set; }          // muitos vínculos (switch/CLP) → destaque
-    public double Width { get; init; } = 160;
-    public double Height { get; init; } = 50;
+    public NodeKind Kind { get; set; }
+    public double Width { get; init; } = 168;
+    public double Height { get; init; } = 54;
 
     [ObservableProperty] private double _x;
     [ObservableProperty] private double _y;
@@ -67,12 +70,13 @@ public static class TopologyLayout
 {
     public static TopologyGraph Build(IEnumerable<TopologyLink> links)
     {
-        const double hGap = 48, vGap = 84, margin = 48;
+        const double nodeW = 168, nodeH = 54, hGap = 40, vGapRow = 34, vGapLevel = 78, margin = 48, maxPerRow = 16;
         var graph = new TopologyGraph();
 
         var nodeMap = new Dictionary<string, TopoNode>(StringComparer.OrdinalIgnoreCase);
         var adj = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         var edgePairs = new Dictionary<string, TopoEdge>();
+        var roleMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         TopoNode Node(string name)
         {
@@ -90,6 +94,8 @@ public static class TopologyLayout
             if (string.IsNullOrWhiteSpace(l.LocalDevice) || string.IsNullOrWhiteSpace(l.NeighborDevice)) continue;
             if (string.Equals(l.LocalDevice, l.NeighborDevice, StringComparison.OrdinalIgnoreCase)) continue;
 
+            if (!string.IsNullOrWhiteSpace(l.LocalRole)) roleMap[l.LocalDevice] = l.LocalRole;
+
             var a = Node(l.LocalDevice);
             var b = Node(l.NeighborDevice);
             adj[a.Name].Add(b.Name);
@@ -103,7 +109,14 @@ public static class TopologyLayout
         if (nodeMap.Count == 0) return graph;
 
         foreach (var n in nodeMap.Values)
+        {
             n.IsHub = adj[n.Name].Count >= 3;
+            var role = roleMap.TryGetValue(n.Name, out var rl) ? rl : "";
+            n.Kind = role.Contains("Controller", StringComparison.OrdinalIgnoreCase) ? NodeKind.Controller
+                   : n.IsHub ? NodeKind.Switch
+                   : !string.IsNullOrWhiteSpace(role) ? NodeKind.IODevice
+                   : NodeKind.Unknown;
+        }
 
         // Níveis via BFS a partir dos nós de maior grau (raiz provável = CLP/switch).
         var level = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -124,26 +137,32 @@ public static class TopologyLayout
             nextBase = level.Values.Count > 0 ? level.Values.Max() + 2 : nextBase + 2;
         }
 
-        double maxWidth = 0;
+        // Posiciona por nível; níveis com muitos nós quebram em várias sub-linhas.
+        double maxWidth = 0, currentY = margin;
         var byLevel = nodeMap.Values.GroupBy(n => level.TryGetValue(n.Name, out var lv) ? lv : 0)
                              .OrderBy(g => g.Key);
         foreach (var g in byLevel)
         {
             var arr = g.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            int perRow = (int)Math.Min(arr.Count, maxPerRow);
+            if (perRow < 1) perRow = 1;
             for (int i = 0; i < arr.Count; i++)
             {
-                arr[i].X = margin + i * (arr[i].Width + hGap);
-                arr[i].Y = margin + g.Key * (arr[i].Height + vGap);
+                int col = i % perRow;
+                int subRow = i / perRow;
+                arr[i].X = margin + col * (nodeW + hGap);
+                arr[i].Y = currentY + subRow * (nodeH + vGapRow);
             }
-            double rowW = margin + arr.Count * (160 + hGap);
+            int subRows = (int)Math.Ceiling(arr.Count / (double)perRow);
+            currentY += subRows * (nodeH + vGapRow) + vGapLevel;
+            double rowW = margin + perRow * (nodeW + hGap);
             if (rowW > maxWidth) maxWidth = rowW;
         }
 
-        int levels = level.Count > 0 ? level.Values.Max() + 1 : 1;
         graph.Nodes.AddRange(nodeMap.Values);
         graph.Edges.AddRange(edgePairs.Values);
         graph.Width = maxWidth + margin;
-        graph.Height = margin * 2 + levels * (50 + vGap);
+        graph.Height = currentY + margin;
         return graph;
     }
 }
